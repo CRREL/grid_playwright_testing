@@ -1,15 +1,12 @@
-import path from 'path';
-import { test, expect } from '../../fixtures';
-import { createDefaultAoiByCoordinates } from '../../utils/aois';
-import { waitForApiResponse } from '../../utils/network';
-import { updateCookies } from '../../utils/update-cookies';
+import { test, expect } from '../../../fixtures';
+import { createDefaultAoiByCoordinates, lineFile, pointFile, polygonFile } from '../../../utils/aois';
+import { waitForApiResponse } from '../../../utils/network';
+import { navigateToMap } from '../../../utils/before-test';
 
 let createdAois = 0;
 
 test.beforeEach(async ({ page, context }) => {
-  await page.goto('/grid/map');
-  await page.waitForTimeout(1000);
-  updateCookies(await context.cookies());
+  await navigateToMap(page, context);
 });
 
 test.afterEach(async ({ page }) => {
@@ -154,9 +151,9 @@ test.describe('aoi creation', () => {
     await page.getByText('Browse').click();
     
     const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles(path.join(__dirname, '../../test-files/polygon.geojson'));
+    await fileChooser.setFiles(polygonFile);
 
-    await page.getByRole('button', { name: 'Upload' }).click();
+    await page.getByRole('button', { name: 'Upload', exact: true }).click();
     await page.locator('#upload-name-checkbox').check();
     await page.getByRole('button', { name: 'Import AOIs' }).click();
 
@@ -178,7 +175,7 @@ test.describe('aoi creation', () => {
     await page.getByText('Browse').click();
     
     const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles(path.join(__dirname, '../../test-files/line.geojson'));
+    await fileChooser.setFiles(lineFile);
 
     await page.getByRole('button', { name: 'Upload' }).click();
     await page.locator('#upload-name-checkbox').check();
@@ -202,7 +199,7 @@ test.describe('aoi creation', () => {
     await page.getByText('Browse').click();
     
     const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles(path.join(__dirname, '../../test-files/point.geojson'));
+    await fileChooser.setFiles(pointFile);
 
     await page.getByRole('button', { name: 'Upload' }).click();
     await page.locator('#upload-name-checkbox').check();

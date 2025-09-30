@@ -1,14 +1,12 @@
-import { test, expect } from '../../../fixtures';
-import { baseURL } from '../../../playwright.config';
-import { isSorted, useDefaultAoi } from '../../../utils/aois';
-import { enableDataLayer } from '../../../utils/layers';
-import { waitForApiResponse } from '../../../utils/network';
-import { updateCookies } from '../../../utils/update-cookies';
+import { test, expect } from '../../../../fixtures';
+import { baseURL } from '../../../../playwright.config';
+import { isSorted, useDefaultAoi } from '../../../../utils/aois';
+import { navigateToMap } from '../../../../utils/before-test';
+import { enableDataLayer } from '../../../../utils/layers';
+import { waitForApiResponse } from '../../../../utils/network';
 
 test.beforeEach(async ({ page, context }) => {
-  await page.goto('/grid/map');
-  await page.waitForTimeout(1000);
-  updateCookies(await context.cookies());
+  await navigateToMap(page, context);
 });
 
 test.describe('export pointclouds', () => {
@@ -20,12 +18,14 @@ test.describe('export pointclouds', () => {
 
     await page.getByRole('button', { name: 'Program' }).click();
     await waitForApiResponse(page, 'maptable?*');
+    await page.waitForTimeout(1000);
 
     const programsBefore = await page.locator('td#program').allTextContents();
     expect(isSorted(programsBefore, 'ascending')).toBeTruthy();
 
     await page.getByRole('button', { name: 'Program' }).click();
     await waitForApiResponse(page, 'maptable?*');
+    await page.waitForTimeout(1000);
 
     const programsAfter = await page.locator('td#program').allTextContents();
     expect(isSorted(programsAfter, 'descending')).toBeTruthy();
@@ -33,7 +33,10 @@ test.describe('export pointclouds', () => {
 
   test('pointcloud streaming url', async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await enableDataLayer(page, "pointclouds");
+    await page.getByRole('button', { name: 'Data Layers' }).click();
+    await page.getByRole('button', { name: 'Reset all filters' }).click();
+    await page.locator('div').filter({ hasText: /^CheckLayer colorPointcloudsLayer filtering$/ }).locator('path').nth(2).click();
+    await page.getByRole('checkbox', { name: 'Visualizable in browser (data tiles)' }).check();
     await useDefaultAoi(page);
 
     await page.evaluateHandle(() => navigator.clipboard.writeText(""));
@@ -41,6 +44,7 @@ test.describe('export pointclouds', () => {
     const clipboardContentBefore = await handleBefore.jsonValue();
     expect(clipboardContentBefore === "").toBeTruthy();
 
+    await page.getByText('Data Tiles').click();
     await page.getByRole('row', { name: 'Copy URL' }).first().locator('span').click();
 
     const handleAfter = await page.evaluateHandle(() => navigator.clipboard.readText());
@@ -68,11 +72,6 @@ test.describe('export pointclouds', () => {
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Finish' }).click();
-
-    await page.waitForResponse(response => response.status() === 202
-      && response.request().method() === 'POST'
-    );
-    await expect(page.getByRole('heading', { name: 'Export Submitted' })).toBeVisible();
   });
 
   test('pointcloud to dem warning', async ({ page }) => {

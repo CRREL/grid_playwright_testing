@@ -1,37 +1,37 @@
-import { test, expect } from '../../../fixtures';
-import { baseURL } from '../../../playwright.config';
-import { isSorted, useSavedAoi } from '../../../utils/aois';
-import { enableDataLayer } from '../../../utils/layers';
-import { waitForApiResponse } from '../../../utils/network';
-import { updateCookies } from '../../../utils/update-cookies';
+import { expect, test } from '../../../../fixtures';
+import { baseURL } from '../../../../playwright.config';
+import { isSorted, useSavedAoi } from '../../../../utils/aois';
+import { navigateToMap } from '../../../../utils/before-test';
+import { enableDataLayer } from '../../../../utils/layers';
+import { waitForApiResponse } from '../../../../utils/network';
 
 test.beforeEach(async ({ page, context }) => {
-  await page.goto('/grid/map');
-  await page.waitForTimeout(1000);
-  updateCookies(await context.cookies());
+  await navigateToMap(page, context);
 });
 
-test.describe('export elevation models', () => {
+test.describe('export thematic rasters', () => {
   test.describe.configure({ mode: 'default' });
 
-  test('elevation model map table sort', async ({ page }) => {
-    await enableDataLayer(page, "elevation models");
+  test('thematic rasters map table sort', async ({ page }) => {
+    await enableDataLayer(page, "thematic layers");
     await useSavedAoi(page, "TEST_AOI_UKRAINE");
 
     await page.getByRole('button', { name: 'Program' }).click();
     await waitForApiResponse(page, 'maptable?*');
+    await page.waitForTimeout(1000);
 
     const programsBefore = await page.locator('td#program').allTextContents();
     expect(isSorted(programsBefore, 'ascending')).toBeTruthy();
 
     await page.getByRole('button', { name: 'Program' }).click();
     await waitForApiResponse(page, 'maptable?*');
+    await page.waitForTimeout(1000);
 
     const programsAfter = await page.locator('td#program').allTextContents();
     expect(isSorted(programsAfter, 'descending')).toBeTruthy();
   });
 
-  test('elevation models merge by collect', async ({ page }) => {
+  test('thematic rasters merge by collect', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/mapexport`, async route => {
       const payload = route.request().postData();
       const json = payload !== null ? JSON.parse(payload) : null
@@ -40,18 +40,16 @@ test.describe('export elevation models', () => {
       //await route.continue();
     });
 
-    await enableDataLayer(page, "elevation models");
-    await useSavedAoi(page, "TEST_AOI_2");
+    await enableDataLayer(page, "thematic layers");
+    await useSavedAoi(page, "TEST_AOI_UKRAINE");
 
-    await page.getByRole('row', { name: 'BuckEye' }).first().getByRole('checkbox').check();
+    await page.getByRole('checkbox', { name: 'Select row 1', exact: true }).check();
     await page.getByRole('button', { name: 'Export', exact: true }).click();
     await page.getByRole('radio').nth(1).check();
-    await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Finish' }).click();
   });
 
-  test('elevation models specify cell size', async ({ page }) => {
+  test('thematic rasters specify cell size', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/mapexport`, async route => {
       const payload = route.request().postData();
       const json = payload !== null ? JSON.parse(payload) : null
@@ -60,7 +58,7 @@ test.describe('export elevation models', () => {
       //await route.continue();
     });
 
-    await enableDataLayer(page, "elevation models");
+    await enableDataLayer(page, "thematic layers");
     await useSavedAoi(page, "TEST_AOI_UKRAINE");
 
     await page.getByRole('checkbox', { name: 'Select row 1', exact: true }).check();
@@ -74,11 +72,11 @@ test.describe('export elevation models', () => {
     await page.getByPlaceholder('defaults to source cell size').fill('2');
     await page.getByRole('button', { name: 'Finish' }).click();
   });
-
-  test('elevation models download tile', async ({ page }) => {
+  
+  test('thematic layers download tile', async ({ page }) => {
     test.setTimeout(300000);
 
-    await enableDataLayer(page, "elevation models");
+    await enableDataLayer(page, "thematic layers");
     await useSavedAoi(page, "TEST_AOI_UKRAINE");
 
     await page.getByText('Data Tiles').click();
@@ -88,16 +86,5 @@ test.describe('export elevation models', () => {
 
     const download = await page.waitForEvent('download');
     await download.cancel();
-  });
-
-  test('elevation models view html metadata', async ({ page }) => {
-    await enableDataLayer(page, "elevation models");
-    await useSavedAoi(page, "TEST_AOI_UKRAINE_SMALL");
-
-    await page.getByText('Data Tiles').click();
-    await page.getByRole('row', { name: 'DGED5 (2m)' }).first().getByRole('checkbox').first().check();
-    const page1Promise = page.waitForEvent('popup');
-    await page.getByRole('gridcell', { name: 'Open metadata' }).locator('path').first().click();
-    const page1 = await page1Promise;
   });
 });

@@ -1,15 +1,13 @@
-import { expect, test } from '../../fixtures';
-import { baseURL } from '../../playwright.config';
-import { useSavedAoi } from '../../utils/aois';
-import { waitForApiResponse } from '../../utils/network';
-import { updateCookies } from '../../utils/update-cookies';
+import { expect, test } from '../../../fixtures';
+import { baseURL } from '../../../playwright.config';
+import { useSavedAoi } from '../../../utils/aois';
+import { navigateToMap } from '../../../utils/before-test';
+import { waitForApiResponse } from '../../../utils/network';
 
 let createdAois = 0;
 
 test.beforeEach(async ({ page, context }) => {
-  await page.goto('/grid/map');
-  await page.waitForTimeout(1000);
-  updateCookies(await context.cookies());
+  await navigateToMap(page, context);
 });
 
 test.afterEach(async ({ page }) => {
@@ -34,6 +32,7 @@ test.describe('map tools', () => {
       //await route.continue();
     });
     
+    await page.getByRole('button', { name: 'Standard Data' }).click();
     await useSavedAoi(page, "HLZ_TEST_AOI");
     await page.getByRole('button', { name: 'HLZ Tool' }).click();
     await page.getByRole('button', { name: 'Finish' }).click();
@@ -47,6 +46,7 @@ test.describe('map tools', () => {
       //await route.continue();
     });
 
+    await page.getByRole('button', { name: 'Standard Data' }).click();
     await page.getByRole('button', { name: 'Visibility Tool' }).click();
     await page.getByRole('radio', { name: 'MGRS' }).check();
 
@@ -79,6 +79,7 @@ test.describe('map tools', () => {
     const canvas = page.locator('body');
     const box = await canvas.boundingBox();
 
+    await page.getByRole('button', { name: 'Standard Data' }).click();
     await page.getByRole('button', { name: 'Query Tiles' }).click();
     if (box !== null) 
       await page.locator('canvas').click({

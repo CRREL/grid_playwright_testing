@@ -1,14 +1,17 @@
 import { expect, Page, test } from "../../../fixtures";
 import { baseURL } from "../../../playwright.config";
 import { isSorted, useSavedAoi } from "../../../utils/aois";
-import { updateCookies } from "../../../utils/update-cookies";
+import { navigateToMap } from "../../../utils/before-test";
+import { waitForApiResponse } from "../../../utils/network";
 
 const enableDatalayer = async (page: Page) => {
   await page.getByRole('button', { name: 'Features Data' }).click();
   await page.getByRole('button', { name: 'Data Layers' }).click();
   await page.getByRole('button', { name: 'Reset Layer' }).click();
+  await waitForApiResponse(page, 'cdsmap/usercdsmaplayerselection/*/');
+  await expect(page.locator('.alert.alert-secondary')).not.toBeVisible();
+  expect(await page.locator('.rounded-pill').count()).toEqual(0);
 
-  await page.waitForTimeout(500);
   if (await page.locator('.fa-folder-open').count() > 0) {
     await page.getByRole('button', { name: 'Expand Layer Expand Layer' }).click();
   }
@@ -18,9 +21,7 @@ const enableDatalayer = async (page: Page) => {
 }
 
 test.beforeEach(async ({ page, context }) => {
-  await page.goto('/grid/map');
-  await page.waitForTimeout(1000);
-  updateCookies(await context.cookies());
+  await navigateToMap(page, context);
 });
 
 test.describe('source commercial', () => {

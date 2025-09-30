@@ -1,5 +1,5 @@
-import { Download, expect, test } from '../../fixtures';
-import { updateCookies } from '../../utils/update-cookies';
+import { Download, expect, test } from '../../../fixtures';
+import { updateCookies } from '../../../utils/update-cookies';
 
 test.beforeEach(async ({ page, context }) => {
   await page.goto('https://grid.nga.mil/grid/');

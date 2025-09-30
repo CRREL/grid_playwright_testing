@@ -1,37 +1,37 @@
-import { expect, test } from '../../../fixtures';
-import { baseURL } from '../../../playwright.config';
-import { isSorted, useSavedAoi } from '../../../utils/aois';
-import { enableDataLayer } from '../../../utils/layers';
-import { waitForApiResponse } from '../../../utils/network';
-import { updateCookies } from '../../../utils/update-cookies';
+import { expect, test } from '../../../../fixtures';
+import { baseURL } from '../../../../playwright.config';
+import { isSorted, useSavedAoi } from '../../../../utils/aois';
+import { navigateToMap } from '../../../../utils/before-test';
+import { enableDataLayer } from '../../../../utils/layers';
+import { waitForApiResponse } from '../../../../utils/network';
 
 test.beforeEach(async ({ page, context }) => {
-  await page.goto('/grid/map');
-  await page.waitForTimeout(1000);
-  updateCookies(await context.cookies());
+  await navigateToMap(page, context);
 });
 
-test.describe('export thematic rasters', () => {
+test.describe('export imagery', () => {
   test.describe.configure({ mode: 'default' });
 
-  test('thematic rasters map table sort', async ({ page }) => {
-    await enableDataLayer(page, "thematic layers");
-    await useSavedAoi(page, "TEST_AOI_UKRAINE");
+  test('imagery map table sort', async ({ page }) => {
+    await enableDataLayer(page, "imagery");
+    await useSavedAoi(page, "TEST_AOI_IMAGERY");
 
     await page.getByRole('button', { name: 'Program' }).click();
     await waitForApiResponse(page, 'maptable?*');
+    await page.waitForTimeout(1000);
 
     const programsBefore = await page.locator('td#program').allTextContents();
     expect(isSorted(programsBefore, 'ascending')).toBeTruthy();
 
     await page.getByRole('button', { name: 'Program' }).click();
     await waitForApiResponse(page, 'maptable?*');
+    await page.waitForTimeout(1000);
 
     const programsAfter = await page.locator('td#program').allTextContents();
     expect(isSorted(programsAfter, 'descending')).toBeTruthy();
   });
 
-  test('thematic rasters merge by collect', async ({ page }) => {
+  test('imagery merge by collect', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/mapexport`, async route => {
       const payload = route.request().postData();
       const json = payload !== null ? JSON.parse(payload) : null
@@ -40,16 +40,18 @@ test.describe('export thematic rasters', () => {
       //await route.continue();
     });
 
-    await enableDataLayer(page, "thematic layers");
-    await useSavedAoi(page, "TEST_AOI_UKRAINE");
+    await enableDataLayer(page, "imagery");
+    await useSavedAoi(page, "TEST_AOI_IMAGERY");
 
-    await page.getByRole('checkbox', { name: 'Select row 1', exact: true }).check();
+    await page.getByRole('row', { name: 'BuckEye' }).first().getByRole('checkbox').check();
     await page.getByRole('button', { name: 'Export', exact: true }).click();
     await page.getByRole('radio').nth(1).check();
+    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Finish' }).click();
   });
 
-  test('thematic rasters specify cell size', async ({ page }) => {
+  test('imagery specify cell size', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/mapexport`, async route => {
       const payload = route.request().postData();
       const json = payload !== null ? JSON.parse(payload) : null
@@ -58,8 +60,8 @@ test.describe('export thematic rasters', () => {
       //await route.continue();
     });
 
-    await enableDataLayer(page, "thematic layers");
-    await useSavedAoi(page, "TEST_AOI_UKRAINE");
+    await enableDataLayer(page, "imagery");
+    await useSavedAoi(page, "TEST_AOI_IMAGERY");
 
     await page.getByRole('checkbox', { name: 'Select row 1', exact: true }).check();
     await page.getByRole('button', { name: 'Export', exact: true }).click();
@@ -72,12 +74,12 @@ test.describe('export thematic rasters', () => {
     await page.getByPlaceholder('defaults to source cell size').fill('2');
     await page.getByRole('button', { name: 'Finish' }).click();
   });
-  
-  test('thematic layers download tile', async ({ page }) => {
+
+  test('imagery download tile', async ({ page }) => {
     test.setTimeout(300000);
 
-    await enableDataLayer(page, "thematic layers");
-    await useSavedAoi(page, "TEST_AOI_UKRAINE");
+    await enableDataLayer(page, "imagery");
+    await useSavedAoi(page, "TEST_AOI_IMAGERY");
 
     await page.getByText('Data Tiles').click();
     await page.getByRole('checkbox', { name: 'Select row 1', exact: true }).check();

@@ -1,13 +1,11 @@
-import { expect, test } from '../../../fixtures';
-import { isSorted, useDefaultAoi } from '../../../utils/aois';
-import { enableDataLayer } from '../../../utils/layers';
-import { waitForApiResponse } from '../../../utils/network';
-import { updateCookies } from '../../../utils/update-cookies';
+import { expect, test } from '../../../../fixtures';
+import { isSorted, useDefaultAoi } from '../../../../utils/aois';
+import { navigateToMap } from '../../../../utils/before-test';
+import { enableDataLayer } from '../../../../utils/layers';
+import { waitForApiResponse } from '../../../../utils/network';
 
 test.beforeEach(async ({ page, context }) => {
-  await page.goto('/grid/map');
-  await page.waitForTimeout(1000);
-  updateCookies(await context.cookies());
+  await navigateToMap(page, context);
 });
 
 test.describe('export features', () => {
@@ -19,12 +17,14 @@ test.describe('export features', () => {
 
     await page.getByRole('button', { name: 'Program' }).click();
     await waitForApiResponse(page, 'maptable?*');
+    await page.waitForTimeout(1000);
 
     const programsBefore = await page.locator('td#program').allTextContents();
     expect(isSorted(programsBefore, 'ascending')).toBeTruthy();
 
     await page.getByRole('button', { name: 'Program' }).click();
     await waitForApiResponse(page, 'maptable?*');
+    await page.waitForTimeout(1000);
 
     const programsAfter = await page.locator('td#program').allTextContents();
     expect(isSorted(programsAfter, 'descending')).toBeTruthy();

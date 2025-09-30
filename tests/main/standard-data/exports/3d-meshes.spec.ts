@@ -1,13 +1,12 @@
-import { expect, test } from '../../../fixtures';
-import { isSorted, useSavedAoi } from '../../../utils/aois';
-import { enableDataLayer } from '../../../utils/layers';
-import { waitForApiResponse } from '../../../utils/network';
-import { updateCookies } from '../../../utils/update-cookies';
+import { expect, test } from '../../../../fixtures';
+import { baseURL } from '../../../../playwright.config';
+import { isSorted, useSavedAoi } from '../../../../utils/aois';
+import { navigateToMap } from '../../../../utils/before-test';
+import { enableDataLayer } from '../../../../utils/layers';
+import { waitForApiResponse } from '../../../../utils/network';
 
 test.beforeEach(async ({ page, context }) => {
-  await page.goto('/grid/map');
-  await page.waitForTimeout(1000);
-  updateCookies(await context.cookies());
+  await navigateToMap(page, context);
 });
 
 test.describe('export 3d meshes - scenes', () => {
@@ -19,12 +18,14 @@ test.describe('export 3d meshes - scenes', () => {
 
     await page.getByRole('button', { name: 'Product', exact: true }).click();
     await waitForApiResponse(page, 'maptable?*');
+    await page.waitForTimeout(1000);
 
     const programsBefore = await page.locator('td#product').allTextContents();
     expect(isSorted(programsBefore, 'ascending')).toBeTruthy();
 
     await page.getByRole('button', { name: 'Product', exact: true }).click();
     await waitForApiResponse(page, 'maptable?*');
+    await page.waitForTimeout(1000);
 
     const programsAfter = await page.locator('td#product').allTextContents();
     expect(isSorted(programsAfter, 'descending')).toBeTruthy();

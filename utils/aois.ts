@@ -1,6 +1,11 @@
 import { Page } from "@playwright/test";
+import path from "path";
 
 const defaultAoiName = "DEFAULT_TEST_AOI";
+
+export const lineFile = path.join(__dirname, '../test-files/line.geojson');
+export const pointFile = path.join(__dirname, '../test-files/point.geojson');
+export const polygonFile = path.join(__dirname, '../test-files/polygon.geojson');
 
 export const isSorted = (elements: string[], order: 'ascending' | 'descending', type: 'string' | 'number' = 'string') => {
   for (let i = 1; i < elements.length; i++) {
@@ -31,20 +36,14 @@ export const useLastAoi = async (page: Page) => {
 }
 
 export const useDefaultAoi = async (page: Page) => {
-  await page.getByRole('button', { name: 'Saved AOIs', exact: true, }).click();
-  if (await page.getByRole('checkbox', { name: 'Filter by map view' }).isChecked()) {
-    await page.getByRole('checkbox', { name: 'Filter by map view' }).uncheck();
-  }
-  await page.locator('div').filter({ hasText: /^CheckDEFAULT_TEST_AOI$/ }).getByLabel('Check').click();
-  await page.getByRole('button', { name: `Go to AOI: ${defaultAoiName}` }).click();
+  await useSavedAoi(page, defaultAoiName);
 }
 
 export const useSavedAoi = async (page: Page, aoi: string) => {
-  const regex = new RegExp("^Check" + aoi + "$");
   await page.getByRole('button', { name: 'Saved AOIs', exact: true, }).click();
   if (await page.getByRole('checkbox', { name: 'Filter by map view' }).isChecked()) {
     await page.getByRole('checkbox', { name: 'Filter by map view' }).uncheck();
   }
-  await page.locator('div').filter({ hasText: regex }).getByLabel('Check').click();
+  await page.getByText(aoi, { exact: true }).locator('//preceding-sibling::*').getByLabel('Check').click();
   await page.getByRole('button', { name: `Go to AOI: ${aoi}` }).click();
 }
