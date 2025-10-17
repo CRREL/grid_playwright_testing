@@ -43,7 +43,6 @@ test.describe('map functions', () => {
       const mVisible = await scale.filter({hasText: 'm'}).isVisible();
 
       expect(kmVisible || mVisible).toBeTruthy();
-      //await expect(page.locator('.grid-scale.sidebar-closed-inner').filter({hasText: 'mi'})).not.toBeVisible();
     } else {
       await page.getByRole('radio', { name: 'mi' }).check();
       await page.waitForTimeout(250);
@@ -52,7 +51,6 @@ test.describe('map functions', () => {
       const ftVisible = await scale.filter({hasText: 'ft'}).isVisible();
       
       expect(miVisible || ftVisible).toBeTruthy();
-      //await expect(page.locator('.grid-scale.sidebar-closed-inner').filter({hasText: 'km'})).not.toBeVisible();
     }
   });
 

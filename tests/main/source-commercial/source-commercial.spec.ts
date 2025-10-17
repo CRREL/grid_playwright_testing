@@ -2,7 +2,8 @@ import { expect, Page, test } from "../../../fixtures";
 import { baseURL } from "../../../playwright.config";
 import { isSorted, useSavedAoi } from "../../../utils/aois";
 import { navigateToMap } from "../../../utils/before-test";
-import { waitForApiResponse } from "../../../utils/network";
+import { finishAndExpectExport } from "../../../utils/exports";
+import { getJSON, waitForApiResponse } from "../../../utils/network";
 
 const enableDatalayer = async (page: Page) => {
   await page.getByRole('button', { name: 'Features Data' }).click();
@@ -46,73 +47,61 @@ test.describe('source commercial', () => {
 
   test('layer export', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/mapexport`, async route => {
-      const payload = route.request().postData();
-      const json = payload !== null ? JSON.parse(payload) : null
-      await route.fulfill({ status: 202, body: `{"aoi_id":${json?.aoi_id}}` });
-      //await route.continue();
+      const json = getJSON(route);
+      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
     });
     
     await enableDatalayer(page);
-
     await useSavedAoi(page, "FEATURES_TEST_AOI");
 
     await page.getByText('Layers', { exact: true }).click();
     await page.getByRole('checkbox', { name: 'Select row' }).check();
     await page.getByRole('button', { name: 'Export layers' }).click();
     await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('button', { name: 'Finish' }).click();
+    await finishAndExpectExport(page);
   });
 
   test('layer global export', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/mapexport`, async route => {
-      const payload = route.request().postData();
-      const json = payload !== null ? JSON.parse(payload) : null
+      const json = getJSON(route);
       expect(json !== null && json?.cds_global).toBeTruthy();
-      await route.fulfill({ status: 202, body: `{"aoi_id":${json?.aoi_id}}` });
-      //await route.continue();
+      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
     });
     
     await enableDatalayer(page);
-
     await useSavedAoi(page, "FEATURES_TEST_AOI");
 
     await page.getByText('Layers', { exact: true }).click();
     await page.getByRole('checkbox', { name: 'Select row' }).check();
     await page.getByRole('button', { name: 'Export layers' }).click();
     await page.getByRole('checkbox').nth(3).check();
-    await page.getByRole('button', { name: 'Finish' }).click();
+    await finishAndExpectExport(page);
   });
 
   test('single feature export', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/mapexport`, async route => {
-      const payload = route.request().postData();
-      const json = payload !== null ? JSON.parse(payload) : null
-      await route.fulfill({ status: 202, body: `{"aoi_id":${json?.aoi_id}}` });
-      //await route.continue();
+      const json = getJSON(route);
+      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
     });
 
     await enableDatalayer(page);
-
     await useSavedAoi(page, "FEATURES_TEST_AOI");
 
     await page.getByText('Features', { exact: true }).click();
     await page.getByRole('checkbox', { name: 'Select row 1', exact: true }).check();
     await page.getByRole('button', { name: 'Export features', exact: true }).click();
     await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('button', { name: 'Finish' }).click();
+    await finishAndExpectExport(page);
   });
 
   test('multiple features export', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/mapexport`, async route => {
-      const payload = route.request().postData();
-      const json = payload !== null ? JSON.parse(payload) : null
+      const json = getJSON(route);
       expect(json !== null && json?.cds_feature_ids.length === 3).toBeTruthy();
-      await route.fulfill({ status: 202, body: `{"aoi_id":${json?.aoi_id}}` });
-      //await route.continue();
+      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
     });
 
     await enableDatalayer(page);
-
     await useSavedAoi(page, "FEATURES_TEST_AOI");
 
     await page.getByText('Features', { exact: true }).click();
@@ -121,6 +110,6 @@ test.describe('source commercial', () => {
     await page.getByRole('checkbox', { name: 'Select row 3', exact: true }).check();
     await page.getByRole('button', { name: 'Export features', exact: true }).click();
     await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('button', { name: 'Finish' }).click();
+    await finishAndExpectExport(page);
   });
 });

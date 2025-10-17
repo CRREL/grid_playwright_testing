@@ -2,7 +2,7 @@ import { expect, test } from '../../../fixtures';
 import { baseURL } from '../../../playwright.config';
 import { useSavedAoi } from '../../../utils/aois';
 import { navigateToMap } from '../../../utils/before-test';
-import { waitForApiResponse } from '../../../utils/network';
+import { getJSON, waitForApiResponse } from '../../../utils/network';
 
 let createdAois = 0;
 
@@ -26,24 +26,21 @@ test.describe('map tools', () => {
 
   test('basic hlz export', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/hlz-yeah`, async route => {
-      const payload = route.request().postData();
-      const json = payload !== null ? JSON.parse(payload) : null
-      await route.fulfill({ status: 202, body: `{"aoi_id":${json?.aoi_id}}` });
-      //await route.continue();
+      const json = getJSON(route);
+      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
     });
     
     await page.getByRole('button', { name: 'Standard Data' }).click();
     await useSavedAoi(page, "HLZ_TEST_AOI");
     await page.getByRole('button', { name: 'HLZ Tool' }).click();
     await page.getByRole('button', { name: 'Finish' }).click();
+    await expect(page.getByText('successHLZ successfully')).toBeVisible();
   });
 
   test('basic los route', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/los-route`, async route => {
-      const payload = route.request().postData();
-      const json = payload !== null ? JSON.parse(payload) : null;
-      await route.fulfill({ status: 202, body: `{"aoi_id":${json?.aoi_id}}` });
-      //await route.continue();
+      const json = getJSON(route);
+      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
     });
 
     await page.getByRole('button', { name: 'Standard Data' }).click();

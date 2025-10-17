@@ -2,8 +2,9 @@ import { test, expect } from '../../../../fixtures';
 import { baseURL } from '../../../../playwright.config';
 import { isSorted, useDefaultAoi } from '../../../../utils/aois';
 import { navigateToMap } from '../../../../utils/before-test';
+import { finishAndExpectExport } from '../../../../utils/exports';
 import { enableDataLayer } from '../../../../utils/layers';
-import { waitForApiResponse } from '../../../../utils/network';
+import { getJSON, waitForApiResponse } from '../../../../utils/network';
 
 test.beforeEach(async ({ page, context }) => {
   await navigateToMap(page, context);
@@ -56,11 +57,9 @@ test.describe('export pointclouds', () => {
 
   test('pointcloud to dem export', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/mapexport`, async route => {
-      const payload = route.request().postData();
-      const json = payload !== null ? JSON.parse(payload) : null
+      const json = getJSON(route);
       expect(json !== null && json?.generate_dem).toBeTruthy();
-      await route.fulfill({ status: 202, body: `{"aoi_id":${json?.aoi_id}}` });
-      //await route.continue();
+      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
     });
 
     await enableDataLayer(page, "pointclouds");
@@ -71,7 +70,7 @@ test.describe('export pointclouds', () => {
     await page.locator('div:nth-child(5) > .col-10 > .form-check-input').check();
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('button', { name: 'Finish' }).click();
+    await finishAndExpectExport(page);
   });
 
   test('pointcloud to dem warning', async ({ page }) => {
@@ -86,11 +85,9 @@ test.describe('export pointclouds', () => {
 
   test('pointcloud merge by collect', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/mapexport`, async route => {
-      const payload = route.request().postData();
-      const json = payload !== null ? JSON.parse(payload) : null
+      const json = getJSON(route);
       expect(json !== null && json?.file_export_options === 'collect').toBeTruthy();
-      await route.fulfill({ status: 202, body: `{"aoi_id":${json?.aoi_id}}` });
-      //await route.continue();
+      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
     });
 
     await enableDataLayer(page, "pointclouds");
@@ -101,16 +98,14 @@ test.describe('export pointclouds', () => {
     await page.getByRole('radio').nth(1).check();
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('button', { name: 'Finish' }).click();
+    await finishAndExpectExport(page);
   });
 
   test('pointcloud decimate', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/mapexport`, async route => {
-      const payload = route.request().postData();
-      const json = payload !== null ? JSON.parse(payload) : null
+      const json = getJSON(route);
       expect(json !== null && json?.decimation_radius === 1).toBeTruthy();
-      await route.fulfill({ status: 202, body: `{"aoi_id":${json?.aoi_id}}` });
-      //await route.continue();
+      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
     });
 
     await enableDataLayer(page, "pointclouds");
@@ -124,7 +119,7 @@ test.describe('export pointclouds', () => {
     await page.locator('#decimationRadius').click();
     await page.locator('#decimationRadius').press('Shift+ArrowLeft');
     await page.locator('#decimationRadius').fill('1');
-    await page.getByRole('button', { name: 'Finish' }).click();
+    await finishAndExpectExport(page);
   });
 
   test('pointcloud download tile', async ({ page }) => {

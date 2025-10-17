@@ -2,8 +2,9 @@ import { expect, test } from '../../../../fixtures';
 import { baseURL } from '../../../../playwright.config';
 import { isSorted, useSavedAoi } from '../../../../utils/aois';
 import { navigateToMap } from '../../../../utils/before-test';
+import { finishAndExpectExport } from '../../../../utils/exports';
 import { enableDataLayer } from '../../../../utils/layers';
-import { waitForApiResponse } from '../../../../utils/network';
+import { getJSON, waitForApiResponse } from '../../../../utils/network';
 
 test.beforeEach(async ({ page, context }) => {
   await navigateToMap(page, context);
@@ -33,11 +34,9 @@ test.describe('export imagery', () => {
 
   test('imagery merge by collect', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/mapexport`, async route => {
-      const payload = route.request().postData();
-      const json = payload !== null ? JSON.parse(payload) : null
+      const json = getJSON(route);
       expect(json !== null && json?.file_export_options === 'collect').toBeTruthy();
-      await route.fulfill({ status: 202, body: `{"aoi_id":${json?.aoi_id}}` });
-      //await route.continue();
+      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
     });
 
     await enableDataLayer(page, "imagery");
@@ -48,16 +47,14 @@ test.describe('export imagery', () => {
     await page.getByRole('radio').nth(1).check();
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByRole('button', { name: 'Finish' }).click();
+    await finishAndExpectExport(page);
   });
 
   test('imagery specify cell size', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/mapexport`, async route => {
-      const payload = route.request().postData();
-      const json = payload !== null ? JSON.parse(payload) : null
+      const json = getJSON(route);
       expect(json !== null && json?.target_resolution === 2).toBeTruthy();
-      await route.fulfill({ status: 202, body: `{"aoi_id":${json?.aoi_id}}` });
-      //await route.continue();
+      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
     });
 
     await enableDataLayer(page, "imagery");
@@ -72,7 +69,7 @@ test.describe('export imagery', () => {
     await page.getByPlaceholder('defaults to source cell size').click();
     await page.getByPlaceholder('defaults to source cell size').press('ControlOrMeta+a');
     await page.getByPlaceholder('defaults to source cell size').fill('2');
-    await page.getByRole('button', { name: 'Finish' }).click();
+    await finishAndExpectExport(page);
   });
 
   test('imagery download tile', async ({ page }) => {
