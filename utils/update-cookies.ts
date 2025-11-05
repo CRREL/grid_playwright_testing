@@ -1,9 +1,10 @@
 import { Cookie } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
+import { GRID } from '../playwright.config';
 
 export const updateCookies = (cookies: Cookie[]) => {
-  const fileName = path.resolve(__dirname, '../.auth/cookies.json');
+  const fileName = path.resolve(__dirname, `../.auth/${GRID}-cookies.json`);
   const newObj = {
     "cookies": cookies,
     "origins": []

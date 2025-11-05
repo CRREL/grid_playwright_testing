@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 import path from "path";
 
 const defaultAoiName = "DEFAULT_TEST_AOI";
@@ -44,6 +44,8 @@ export const useSavedAoi = async (page: Page, aoi: string) => {
   if (await page.getByRole('checkbox', { name: 'Filter by map view' }).isChecked()) {
     await page.getByRole('checkbox', { name: 'Filter by map view' }).uncheck();
   }
-  await page.getByText(aoi, { exact: true }).locator('//preceding-sibling::*').getByLabel('Check').click();
+  const aoiLoc = page.getByText(aoi, { exact: true }).locator('//preceding-sibling::*').getByLabel('Check');
+  await expect(aoiLoc).toBeVisible();
+  await aoiLoc.click();
   await page.getByRole('button', { name: `Go to AOI: ${aoi}` }).click();
 }

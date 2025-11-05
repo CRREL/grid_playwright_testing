@@ -20,16 +20,18 @@ test.describe('map functions', () => {
       await page.getByRole('checkbox', { name: 'Filter by map view' }).check();
     }
     await waitForApiResponse(page, 'aois?*');
-    await expect(page.locator('#drawer-container').getByText('DEFAULT_TEST_AOI')).toBeVisible();
-    await expect(page.locator('#drawer-container').getByText('TEST_AOI_2')).toBeVisible();
+    const defaultAoi = page.locator('#drawer-container').getByText('DEFAULT_TEST_AOI', { exact: true });
+    const aoi2 = page.locator('#drawer-container').getByText('TEST_AOI_2', { exact: true });
+    await expect(defaultAoi).toBeVisible();
+    await expect(aoi2).toBeVisible();
 
     await useDefaultAoi(page);
 
     await page.getByRole('button', { name: 'Saved AOIs' }).click();
     await page.getByRole('checkbox', { name: 'Filter by map view' }).check();
     await waitForApiResponse(page, 'aois?*');
-    await expect(page.locator('#drawer-container').getByText('DEFAULT_TEST_AOI')).toBeVisible();
-    await expect(page.locator('#drawer-container').getByText('TEST_AOI_2')).not.toBeVisible();
+    await expect(defaultAoi).toBeVisible();
+    await expect(aoi2).not.toBeVisible();
   });
 
   test('distance unit preference', async ({ page }) => {

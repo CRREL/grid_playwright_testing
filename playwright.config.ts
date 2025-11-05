@@ -1,14 +1,17 @@
 import { defineConfig, devices } from '@playwright/test';
 
-export const baseURL = 'https://grid.nga.mil/grid';
-
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+import dotenv from 'dotenv';
+import path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+export const MODE = process.env?.MODE
+export const GRID = MODE === 'dev' ? 'devtestinggrid' : process.env?.GRID ?? 'grid'
+
+export const baseURL = MODE === 'dev' ? 'https://grid-devel-web.rsgiscx.net/devtestinggrid' : `https://grid.nga.mil/${GRID}`;
 
 /**
  * See https://playwright.dev/docs/test-configuration.

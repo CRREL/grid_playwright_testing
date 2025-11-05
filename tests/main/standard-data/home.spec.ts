@@ -1,8 +1,9 @@
 import { Download, expect, test } from '../../../fixtures';
+import { baseURL } from '../../../playwright.config';
 import { updateCookies } from '../../../utils/update-cookies';
 
 test.beforeEach(async ({ page, context }) => {
-  await page.goto('https://grid.nga.mil/grid/');
+  await page.goto(baseURL);
   await page.waitForTimeout(1000);
   updateCookies(await context.cookies());
 });

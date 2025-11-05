@@ -1,5 +1,6 @@
 import { test as baseTest, expect } from '@playwright/test';
 import fs from 'fs';
+import { baseURL, GRID } from './playwright.config';
 
 export * from '@playwright/test';
 export const test = baseTest.extend<{}, { workerStorageState: string }>({
@@ -9,7 +10,7 @@ export const test = baseTest.extend<{}, { workerStorageState: string }>({
   // Authenticate once per worker with a worker-scoped fixture.
   workerStorageState: [async ({ browser }, use) => {
     // Use parallelIndex as a unique identifier for each worker.
-    const fileName = '.auth/cookies.json';
+    const fileName = `.auth/${GRID}-cookies.json`;
 
     if (fs.existsSync(fileName)) {
       // Reuse existing authentication state if any.
@@ -20,7 +21,7 @@ export const test = baseTest.extend<{}, { workerStorageState: string }>({
     // Important: make sure we authenticate in a clean environment by unsetting storage state.
     const page = await browser.newPage({ storageState: undefined });
 
-    await page.goto('https://grid.nga.mil/grid/');
+    await page.goto(baseURL);
     await page.getByRole('link', { name: 'CAC / GEOAxIS Signup / Login' }).click();
     await page.getByRole('link', { name: 'Sign in with PKI Certificate' }).click();
 
