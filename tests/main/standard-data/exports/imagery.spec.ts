@@ -14,7 +14,7 @@ const exportFileType = async (page: Page, fileType: string) => {
   });
 
   await enableDataLayer(page, "imagery");
-  await useSavedAoi(page, "TEST_AOI_IMAGERY");
+  await useSavedAoi(page, "at_aoi_imagery");
 
   await waitForApiResponse(page, 'maptable?*');
   const select = page.getByRole('checkbox', { name: 'Select row' }).first();
@@ -36,11 +36,9 @@ test.beforeEach(async ({ page, context }) => {
 });
 
 test.describe('export imagery', () => {
-  test.describe.configure({ mode: 'default' });
-
   test('imagery map table sort', async ({ page }) => {
     await enableDataLayer(page, "imagery");
-    await useSavedAoi(page, "TEST_AOI_IMAGERY");
+    await useSavedAoi(page, "at_aoi_imagery");
 
     await waitForApiResponse(page, 'maptable?*');
     const program = page.getByRole('button', { name: 'Program' });
@@ -69,7 +67,7 @@ test.describe('export imagery', () => {
     });
 
     await enableDataLayer(page, "imagery");
-    await useSavedAoi(page, "TEST_AOI_IMAGERY");
+    await useSavedAoi(page, "at_aoi_imagery");
 
     await waitForApiResponse(page, 'maptable?*');
     const checkbox = page.getByRole('row', { name: 'BuckEye' }).first().getByRole('checkbox');
@@ -91,7 +89,7 @@ test.describe('export imagery', () => {
     });
 
     await enableDataLayer(page, "imagery");
-    await useSavedAoi(page, "TEST_AOI_IMAGERY");
+    await useSavedAoi(page, "at_aoi_imagery");
 
     await waitForApiResponse(page, 'maptable?*');
     const select = page.getByRole('checkbox', { name: 'Select row' }).first();
@@ -139,7 +137,7 @@ test.describe('export imagery', () => {
     test.setTimeout(300000);
 
     await enableDataLayer(page, "imagery");
-    await useSavedAoi(page, "TEST_AOI_IMAGERY");
+    await useSavedAoi(page, "at_aoi_imagery");
 
     await waitForApiResponse(page, 'maptable?*');
     const dataTiles = page.getByText('Data Tiles');

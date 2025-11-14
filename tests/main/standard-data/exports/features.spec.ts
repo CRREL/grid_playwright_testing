@@ -14,7 +14,7 @@ const exportFileType = async (page: Page, fileType: string) => {
   });
 
   await enableDataLayer(page, "features");
-  await useSavedAoi(page, "FEATURES_TEST_AOI");
+  await useDefaultAoi(page);
 
   await waitForApiResponse(page, 'maptable?*');
   const select = page.getByRole('checkbox', { name: 'Select row' }).first();
@@ -36,8 +36,6 @@ test.beforeEach(async ({ page, context }) => {
 });
 
 test.describe('export features', () => {
-  test.describe.configure({ mode: 'default' });
-
   test('features map table sort', async ({ page }) => {
     await enableDataLayer(page, "features");
     await useDefaultAoi(page);

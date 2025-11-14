@@ -14,7 +14,7 @@ const exportFileType = async (page: Page, fileType: string) => {
   });
   
   await enableDataLayer(page, "3d meshes / scenes");
-  await useSavedAoi(page, "TEST_AOI_UKRAINE");
+  await useSavedAoi(page, "at_aoi_3d_meshes");
 
   await waitForApiResponse(page, 'maptable?*');
   const checkbox = page.getByRole('row').filter({ hasText: fileType }).getByRole('checkbox').first();
@@ -29,11 +29,9 @@ test.beforeEach(async ({ page, context }) => {
 });
 
 test.describe('export 3d meshes - scenes', () => {
-  test.describe.configure({ mode: 'default' });
-
   test('meshes map table sort', async ({ page }) => {
     await enableDataLayer(page, "3d meshes / scenes");
-    await useSavedAoi(page, "TEST_AOI_UKRAINE");
+    await useSavedAoi(page, "at_aoi_3d_meshes");
 
     await waitForApiResponse(page, 'maptable?*');
     const product = page.getByRole('button', { name: 'Product', exact: true });
@@ -57,7 +55,7 @@ test.describe('export 3d meshes - scenes', () => {
   test('meshes streaming url', async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await enableDataLayer(page, "3d meshes / scenes");
-    await useSavedAoi(page, "TEST_AOI_UKRAINE");
+    await useSavedAoi(page, "at_aoi_3d_meshes");
 
     await waitForApiResponse(page, 'maptable?*');
     await page.evaluateHandle(() => navigator.clipboard.writeText(""));

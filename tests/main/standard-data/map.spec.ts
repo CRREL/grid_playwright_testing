@@ -8,8 +8,6 @@ test.beforeEach(async ({ page, context }) => {
 });
 
 test.describe('map functions', () => {
-  test.describe.configure({ mode: 'default' });
-
   test('filter by map view', async ({ page }) => {
     for(let i = 0; i < 10; i++) {
       await page.getByRole('button', { name: 'Zoom out' }).click();
@@ -20,8 +18,8 @@ test.describe('map functions', () => {
       await page.getByRole('checkbox', { name: 'Filter by map view' }).check();
     }
     await waitForApiResponse(page, 'aois?*');
-    const defaultAoi = page.locator('#drawer-container').getByText('DEFAULT_TEST_AOI', { exact: true });
-    const aoi2 = page.locator('#drawer-container').getByText('TEST_AOI_2', { exact: true });
+    const defaultAoi = page.locator('#drawer-container').getByText('at_aoi_default_washington', { exact: true }).first();
+    const aoi2 = page.locator('#drawer-container').getByText('at_aoi_ukraine', { exact: true }).first();
     await expect(defaultAoi).toBeVisible();
     await expect(aoi2).toBeVisible();
 

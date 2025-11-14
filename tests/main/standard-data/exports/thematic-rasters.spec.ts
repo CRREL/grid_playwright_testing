@@ -14,7 +14,7 @@ const exportFileType = async (page: Page, fileType: string) => {
   });
 
   await enableDataLayer(page, "thematic layers");
-  await useSavedAoi(page, "TEST_AOI_UKRAINE");
+  await useSavedAoi(page, "at_aoi_ukraine");
 
   await waitForApiResponse(page, 'maptable?*');
   const select = page.getByRole('checkbox', { name: 'Select row' }).first();
@@ -36,11 +36,9 @@ test.beforeEach(async ({ page, context }) => {
 });
 
 test.describe('export thematic rasters', () => {
-  test.describe.configure({ mode: 'default' });
-
   test('thematic rasters map table sort', async ({ page }) => {
     await enableDataLayer(page, "thematic layers");
-    await useSavedAoi(page, "TEST_AOI_UKRAINE");
+    await useSavedAoi(page, "at_aoi_ukraine");
 
     await waitForApiResponse(page, 'maptable?*');
     const program = page.getByRole('button', { name: 'Program' });
@@ -69,7 +67,7 @@ test.describe('export thematic rasters', () => {
     });
 
     await enableDataLayer(page, "thematic layers");
-    await useSavedAoi(page, "TEST_AOI_UKRAINE");
+    await useSavedAoi(page, "at_aoi_ukraine");
 
     await waitForApiResponse(page, 'maptable?*');
     const checkbox = page.getByRole('row', { name: 'Select Row' }).first().getByRole('checkbox');
@@ -91,7 +89,7 @@ test.describe('export thematic rasters', () => {
     });
 
     await enableDataLayer(page, "thematic layers");
-    await useSavedAoi(page, "TEST_AOI_UKRAINE");
+    await useSavedAoi(page, "at_aoi_ukraine");
 
     await waitForApiResponse(page, 'maptable?*');
     const select = page.getByRole('checkbox', { name: 'Select row' }).first();
@@ -135,7 +133,7 @@ test.describe('export thematic rasters', () => {
     test.setTimeout(300000);
 
     await enableDataLayer(page, "thematic layers");
-    await useSavedAoi(page, "TEST_AOI_UKRAINE_SMALL");
+    await useSavedAoi(page, "at_aoi_ukraine");
 
     await waitForApiResponse(page, 'maptable?*');
     const dataTiles = page.getByText('Data Tiles');

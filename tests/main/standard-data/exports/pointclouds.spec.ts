@@ -36,8 +36,6 @@ test.beforeEach(async ({ page, context }) => {
 });
 
 test.describe('export pointclouds', () => {
-  test.describe.configure({ mode: 'default' });
-
   test('pointcloud map table sort', async ({ page }) => {
     await enableDataLayer(page, "pointclouds");
     await useDefaultAoi(page);

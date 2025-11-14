@@ -1,0 +1,9 @@
+{
+  "type": "FeatureCollection",
+  "name": "at_aoi_ukraine",
+  "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+  "features": [
+  { "type": "Feature", "properties": { "PROJECT_NAME": "at_aoi_ukraine" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 37.286789723397, 48.293297667882499 ], [ 37.424474929426495, 48.293297667882499 ], [ 37.424474929426495, 48.382260779554699 ], [ 37.286789723397, 48.382260779554699 ], [ 37.286789723397, 48.293297667882499 ] ] ] } }
+  ]
+}
+  

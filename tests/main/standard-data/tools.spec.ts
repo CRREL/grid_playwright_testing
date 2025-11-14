@@ -1,5 +1,5 @@
-import { expect, test } from '../../../fixtures';
-import { baseURL } from '../../../playwright.config';
+import { expect, Page, test } from '../../../fixtures';
+import { baseURL, GRID } from '../../../playwright.config';
 import { useSavedAoi } from '../../../utils/aois';
 import { navigateToMap } from '../../../utils/before-test';
 import { getJSON, waitForApiResponse } from '../../../utils/network';
@@ -12,7 +12,7 @@ test.beforeEach(async ({ page, context }) => {
 
 test.afterEach(async ({ page }) => {
   if (createdAois > 0) {
-    await page.goto('/grid/export/aoi/list');
+    await page.goto(`/${GRID}/export/aoi/list`);
     await page.getByRole('checkbox').nth(1).check();
     await page.getByRole('rowgroup').filter({ hasText: 'Delete selected Clear data notifications Name Recent Activity (UTC) Date' }).locator('input[type="button"]').click();
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
@@ -21,9 +21,15 @@ test.afterEach(async ({ page }) => {
   }
 });
 
-test.describe('map tools', () => {
-  test.describe.configure({ mode: 'default' });
+const deleteAoi = async (page: Page, aoi: string) => {
+  await page.goto(`/${GRID}/export/aoi/list`);
+  await page.locator('td').filter({ hasText: aoi }).locator('//preceding-sibling::*').getByRole('checkbox').first().check();
+  await page.getByRole('rowgroup').filter({ hasText: 'Delete selected Clear data notifications Name Recent Activity (UTC) Date' }).locator('input[type="button"]').click();
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(page.getByText('Selected aoi(s) have been')).toBeVisible();
+}
 
+test.describe('map tools', () => {
   test('basic hlz export', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/hlz-yeah`, async route => {
       const json = getJSON(route);
@@ -31,7 +37,7 @@ test.describe('map tools', () => {
     });
     
     await page.getByRole('button', { name: 'Standard Data' }).click();
-    await useSavedAoi(page, "HLZ_TEST_AOI");
+    await useSavedAoi(page, "at_aoi_hlz");
     await page.getByRole('button', { name: 'HLZ Tool' }).click();
     await page.getByRole('button', { name: 'Finish' }).click();
     await expect(page.getByText('successHLZ successfully')).toBeVisible();
@@ -68,8 +74,10 @@ test.describe('map tools', () => {
     await waitForApiResponse(page, 'foundational-data-check/?*');
 
     await page.getByRole('button', { name: 'Finish' }).click();
+    await waitForApiResponse(page, 'los-route');
     await expect(page.getByText('successExport successfully')).toBeVisible();
-    createdAois++;
+    const aoiName = await page.locator('.tooltip-background').getByText('').first().innerText();
+    await deleteAoi(page, aoiName);
   });
 
   test('query tiles opens data tiles', async ({ page }) => {
@@ -86,6 +94,7 @@ test.describe('map tools', () => {
         }
       });
     await expect(page.locator('.tile-checked')).toBeVisible();
-    createdAois++;
+    const aoiName = await page.getByRole('textbox', { name: 'AOI Name:' }).inputValue();
+    await deleteAoi(page, aoiName);
   });
 });

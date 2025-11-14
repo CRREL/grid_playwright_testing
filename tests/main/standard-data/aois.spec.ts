@@ -1,32 +1,26 @@
-import { test, expect } from '../../../fixtures';
+import { test, expect, Page } from '../../../fixtures';
 import { createDefaultAoiByCoordinates, lineFile, pointFile, polygonFile } from '../../../utils/aois';
 import { waitForApiResponse } from '../../../utils/network';
 import { navigateToMap } from '../../../utils/before-test';
-
-let createdAois = 0;
+import { GRID } from '../../../playwright.config';
 
 test.beforeEach(async ({ page, context }) => {
   await navigateToMap(page, context);
 });
 
-test.afterEach(async ({ page }) => {
-  if (createdAois > 0) {
-    await page.goto('/grid/export/aoi/list');
-    await page.getByRole('checkbox').nth(1).check();
-    await page.getByRole('rowgroup').filter({ hasText: 'Delete selected Clear data notifications Name Recent Activity (UTC) Date' }).locator('input[type="button"]').click();
-    await page.getByRole('button', { name: 'Delete', exact: true }).click();
-    await expect(page.getByText('Selected aoi(s) have been')).toBeVisible();
-    createdAois--;
-  }
-});
+const deleteAoi = async (page: Page, aoi: string) => {
+  await page.goto(`/${GRID}/export/aoi/list`);
+  await page.locator('td').filter({ hasText: aoi }).locator('//preceding-sibling::*').getByRole('checkbox').first().check();
+  await page.getByRole('rowgroup').filter({ hasText: 'Delete selected Clear data notifications Name Recent Activity (UTC) Date' }).locator('input[type="button"]').click();
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(page.getByText('Selected aoi(s) have been')).toBeVisible();
+}
 
 test.describe('aoi creation', () => {
-  test.describe.configure({ mode: 'default' });
-
   test('aoi delete from map', async ({ page }) => {
     await createDefaultAoiByCoordinates(page);
 
-    const aoiName = await page.getByRole('textbox', { name: 'AOI Name:' }).innerText();
+    const aoiName = await page.getByRole('textbox', { name: 'AOI Name:' }).inputValue();
     await page.getByRole('button', { name: 'Delete AOI' }).click();
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
 
@@ -38,12 +32,8 @@ test.describe('aoi creation', () => {
 
   test('aoi delete from exports', async ({ page }) => {
     await createDefaultAoiByCoordinates(page);
-
-    await page.getByRole('link', { name: 'Exports' }).click();
-    await page.getByRole('checkbox').nth(1).check();
-    await page.getByRole('rowgroup').filter({ hasText: 'Delete selected Clear data notifications Name Recent Activity (UTC) Date' }).locator('input[type="button"]').click();
-    await page.getByRole('button', { name: 'Delete', exact: true }).click();
-    await expect(page.getByText('Selected aoi(s) have been')).toBeVisible();
+    const aoiName = await page.getByRole('textbox', { name: 'AOI Name:' }).inputValue();
+    await deleteAoi(page, aoiName);
   });
 
   test('aoi by country', async ({ page }) => {
@@ -56,7 +46,7 @@ test.describe('aoi creation', () => {
       && response.request().method() === 'POST'
     );
     await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    createdAois++;
+    await deleteAoi(page, 'Andorra');
   });
 
   test('aoi by geojson', async ({ page }) => {
@@ -73,7 +63,8 @@ test.describe('aoi creation', () => {
       && response.request().method() === 'POST'
     );
     await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    createdAois++;
+    const aoiName = await page.getByRole('textbox', { name: 'AOI Name:' }).inputValue();
+    await deleteAoi(page, aoiName);
   });
 
   test('aoi by wkt', async ({ page }) => {
@@ -90,7 +81,8 @@ test.describe('aoi creation', () => {
       && response.request().method() === 'POST'
     );
     await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    createdAois++;
+    const aoiName = await page.getByRole('textbox', { name: 'AOI Name:' }).inputValue();
+    await deleteAoi(page, aoiName);
   });
 
   test('aoi by coordinates', async ({ page }) => {
@@ -121,7 +113,8 @@ test.describe('aoi creation', () => {
       && response.request().method() === 'POST'
     );
     await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    createdAois++;
+    const aoiName = await page.getByRole('textbox', { name: 'AOI Name:' }).inputValue();
+    await deleteAoi(page, aoiName);
   });
 
   test('aoi by radius', async ({ page }) => {
@@ -140,7 +133,8 @@ test.describe('aoi creation', () => {
       && response.request().method() === 'POST'
     );
     await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    createdAois++;
+    const aoiName = await page.getByRole('textbox', { name: 'AOI Name:' }).inputValue();
+    await deleteAoi(page, aoiName);
   });
 
   test('aoi upload polygon', async ({ page }) => {
@@ -161,7 +155,8 @@ test.describe('aoi creation', () => {
       && response.request().method() === 'POST'
     );
     await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    createdAois++;
+    const aoiName = await page.getByRole('textbox', { name: 'AOI Name:' }).inputValue();
+    await deleteAoi(page, aoiName);
   });
 
   test('aoi upload line', async ({ page }) => {
@@ -185,7 +180,8 @@ test.describe('aoi creation', () => {
       && response.request().method() === 'POST'
     );
     await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    createdAois++;
+    const aoiName = await page.getByRole('textbox', { name: 'AOI Name:' }).inputValue();
+    await deleteAoi(page, aoiName);
   });
 
   test('aoi upload point', async ({ page }) => {
@@ -209,6 +205,7 @@ test.describe('aoi creation', () => {
       && response.request().method() === 'POST'
     );
     await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    createdAois++;
+    const aoiName = await page.getByRole('textbox', { name: 'AOI Name:' }).inputValue();
+    await deleteAoi(page, aoiName);
   });
 });

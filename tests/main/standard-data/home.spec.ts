@@ -9,8 +9,6 @@ test.beforeEach(async ({ page, context }) => {
 });
 
 test.describe('home page functions', () => {
-  test.describe.configure({ mode: 'default' });
-
   test('quick aoi from home page', async ({ page }) => {
     await page.getByRole('link', { name: 'Quick AOI' }).click();
     await expect(page.getByRole('heading', { name: 'AOI By Coordinates' })).toBeVisible();

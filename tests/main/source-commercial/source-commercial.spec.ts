@@ -5,6 +5,15 @@ import { navigateToMap } from "../../../utils/before-test";
 import { finishAndExpectExport } from "../../../utils/exports";
 import { getJSON, waitForApiResponse } from "../../../utils/network";
 
+const getFeatureLayerLoc = (page: Page, layer: string) => {
+  const layers = layer.split('/');
+  let loc = page.locator('.align-items-center').filter({hasText: layers[0]});
+  for (let i = 1; i < layers.length; i++) {
+    loc = loc.locator('.list-group-item').filter({hasText: layers[i]});
+  }
+  return loc.locator('.btn.header-checkbox').first();
+}
+
 const enableDatalayer = async (page: Page) => {
   await page.getByRole('button', { name: 'Features Data' }).click();
   await page.getByRole('button', { name: 'Data Layers' }).click();
@@ -18,7 +27,7 @@ const enableDatalayer = async (page: Page) => {
   }
   await page.getByRole('button', { name: 'Expand Layer Expand Layer' }).click();
 
-  const loc = page.locator('.list-group-item > div > .list-group > div > div > div > div > .btn').first();
+  const loc = getFeatureLayerLoc(page, 'Petroleum, Oil, & Lubricants Storage/Oil Storage (Ursa Black Gold)/2025');
   await expect(loc).toBeVisible();
   await loc.click();
 }
@@ -31,7 +40,7 @@ const exportFileType = async (page: Page, fileType: string) => {
   });
 
   await enableDatalayer(page);
-  await useSavedAoi(page, "FEATURES_TEST_AOI");
+  await useSavedAoi(page, "at_aoi_source_com");
 
   const features = page.getByText('Features', { exact: true });
   await expect(features).not.toBeDisabled();
@@ -56,12 +65,10 @@ test.beforeEach(async ({ page, context }) => {
 });
 
 test.describe('source commercial', () => {
-  test.describe.configure({ mode: 'default' });
-
   test('features map table sort', async ({ page }) => {
     await enableDatalayer(page);
 
-    await useSavedAoi(page, "FEATURES_TEST_AOI");
+    await useSavedAoi(page, "at_aoi_source_com");
     await page.getByText('Features', { exact: true }).click();
     
     const ogr = page.getByRole('button', { name: 'Ogr Fid' });
@@ -86,7 +93,7 @@ test.describe('source commercial', () => {
     });
     
     await enableDatalayer(page);
-    await useSavedAoi(page, "FEATURES_TEST_AOI");
+    await useSavedAoi(page, "at_aoi_source_com");
 
     const layers = page.getByText('Layers', { exact: true });
     await expect(layers).not.toBeDisabled();
@@ -107,7 +114,7 @@ test.describe('source commercial', () => {
     });
     
     await enableDatalayer(page);
-    await useSavedAoi(page, "FEATURES_TEST_AOI");
+    await useSavedAoi(page, "at_aoi_source_com");
 
     const layers = page.getByText('Layers', { exact: true });
     await expect(layers).not.toBeDisabled();
@@ -132,7 +139,7 @@ test.describe('source commercial', () => {
     });
 
     await enableDatalayer(page);
-    await useSavedAoi(page, "FEATURES_TEST_AOI");
+    await useSavedAoi(page, "at_aoi_source_com");
 
     const features = page.getByText('Features', { exact: true });
     await expect(features).not.toBeDisabled();
@@ -153,7 +160,7 @@ test.describe('source commercial', () => {
     });
 
     await enableDatalayer(page);
-    await useSavedAoi(page, "FEATURES_TEST_AOI");
+    await useSavedAoi(page, "at_aoi_source_com");
 
     const features = page.getByText('Features', { exact: true });
     await expect(features).not.toBeDisabled();

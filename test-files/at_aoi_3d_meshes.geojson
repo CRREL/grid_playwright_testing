@@ -1,0 +1,8 @@
+{
+  "type": "FeatureCollection",
+  "name": "at_aoi_3d_meshes",
+  "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+  "features": [
+  { "type": "Feature", "properties": { "PROJECT_NAME": "at_aoi_3d_meshes" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 37.484368715703098, 47.095383990032602 ], [ 37.609020242042398, 47.095383990032602 ], [ 37.609020242042398, 47.191288827127501 ], [ 37.484368715703098, 47.191288827127501 ], [ 37.484368715703098, 47.095383990032602 ] ] ] } }
+  ]
+}

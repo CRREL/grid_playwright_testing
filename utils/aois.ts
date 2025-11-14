@@ -1,7 +1,7 @@
 import { expect, Page } from "@playwright/test";
 import path from "path";
 
-const defaultAoiName = "DEFAULT_TEST_AOI";
+const defaultAoiName = "at_aoi_default_washington";
 
 export const lineFile = path.join(__dirname, '../test-files/line.geojson');
 export const pointFile = path.join(__dirname, '../test-files/point.geojson');
@@ -40,12 +40,34 @@ export const useDefaultAoi = async (page: Page) => {
 }
 
 export const useSavedAoi = async (page: Page, aoi: string) => {
+  let skipGoToAoi = false;
   await page.getByRole('button', { name: 'Saved AOIs', exact: true, }).click();
   if (await page.getByRole('checkbox', { name: 'Filter by map view' }).isChecked()) {
     await page.getByRole('checkbox', { name: 'Filter by map view' }).uncheck();
   }
-  const aoiLoc = page.getByText(aoi, { exact: true }).locator('//preceding-sibling::*').getByLabel('Check');
-  await expect(aoiLoc).toBeVisible();
+  const aoiLoc = page.getByText(aoi, { exact: true }).locator('//preceding-sibling::*').getByLabel('Check').first();
+  await expect(aoiLoc).toBeVisible().catch(async () => {
+    const polygonFile = path.join(__dirname, `../test-files/${aoi}.geojson`);
+    const fileChooserPromise = page.waitForEvent('filechooser');
+
+    await page.getByTitle('Change AOI creation tool').click();
+    await page.getByRole('button', { name: 'Upload AOI' }).click();
+    await page.getByText('Browse').click();
+    
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(polygonFile);
+
+    await page.getByRole('button', { name: 'Upload', exact: true }).click();
+    await page.locator('#upload-name-checkbox').check();
+    await page.getByRole('button', { name: 'Import AOIs' }).click();
+
+    await page.waitForResponse(response => response.status() === 201
+      && response.request().method() === 'POST'
+    );
+    await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
+    skipGoToAoi = true;
+  });
+  if (skipGoToAoi) return;
   await aoiLoc.click();
   await page.getByRole('button', { name: `Go to AOI: ${aoi}` }).click();
 }

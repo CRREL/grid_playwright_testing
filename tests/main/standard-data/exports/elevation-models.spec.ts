@@ -14,7 +14,7 @@ const exportFileType = async (page: Page, fileType: string) => {
   });
 
   await enableDataLayer(page, "elevation models");
-  await useSavedAoi(page, "TEST_AOI_UKRAINE");
+  await useSavedAoi(page, "at_aoi_ukraine");
 
   await waitForApiResponse(page, 'maptable?*');
   const select = page.getByRole('checkbox', { name: 'Select row' }).first();
@@ -36,11 +36,9 @@ test.beforeEach(async ({ page, context }) => {
 });
 
 test.describe('export elevation models', () => {
-  test.describe.configure({ mode: 'default' });
-
   test('elevation model map table sort', async ({ page }) => {
     await enableDataLayer(page, "elevation models");
-    await useSavedAoi(page, "TEST_AOI_UKRAINE");
+    await useSavedAoi(page, "at_aoi_ukraine");
 
     await waitForApiResponse(page, 'maptable?*');
     const program = page.getByRole('button', { name: 'Program' });
@@ -69,7 +67,7 @@ test.describe('export elevation models', () => {
     });
 
     await enableDataLayer(page, "elevation models");
-    await useSavedAoi(page, "TEST_AOI_2");
+    await useSavedAoi(page, "at_aoi_em_buckeye");
 
     await waitForApiResponse(page, 'maptable?*');
     const checkbox = page.getByRole('row', { name: 'BuckEye' }).first().getByRole('checkbox');
@@ -91,7 +89,7 @@ test.describe('export elevation models', () => {
     });
 
     await enableDataLayer(page, "elevation models");
-    await useSavedAoi(page, "TEST_AOI_UKRAINE");
+    await useSavedAoi(page, "at_aoi_ukraine");
 
     await waitForApiResponse(page, 'maptable?*');
     const select = page.getByRole('checkbox', { name: 'Select row' }).first();
@@ -139,7 +137,7 @@ test.describe('export elevation models', () => {
     test.setTimeout(300000);
 
     await enableDataLayer(page, "elevation models");
-    await useSavedAoi(page, "TEST_AOI_UKRAINE_SMALL");
+    await useSavedAoi(page, "at_aoi_ukraine");
 
     await waitForApiResponse(page, 'maptable?*');
     const dataTiles = page.getByText('Data Tiles');
@@ -159,7 +157,7 @@ test.describe('export elevation models', () => {
 
   test('elevation models view html metadata', async ({ page }) => {
     await enableDataLayer(page, "elevation models");
-    await useSavedAoi(page, "TEST_AOI_UKRAINE_SMALL");
+    await useSavedAoi(page, "at_aoi_ukraine");
 
     await waitForApiResponse(page, 'maptable?*');
     const dataTiles = page.getByText('Data Tiles');

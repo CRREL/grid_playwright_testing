@@ -9,7 +9,7 @@ import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 export const MODE = process.env?.MODE
-export const GRID = MODE === 'dev' ? 'devtestinggrid' : process.env?.GRID ?? 'grid'
+export const GRID = MODE === 'dev' ? 'devtestinggrid' : process.env?.GRID ?? 'testgrid'
 
 export const baseURL = MODE === 'dev' ? 'https://grid-devel-web.rsgiscx.net/devtestinggrid' : `https://grid.nga.mil/${GRID}`;
 
