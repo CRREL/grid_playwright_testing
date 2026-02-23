@@ -1,4 +1,4 @@
-import { expect, Page } from "@playwright/test";
+import { Page } from "@playwright/test";
 
 export const enableDataLayer = async (page: Page, layer: string) => {
   await page.getByRole('button', { name: 'Standard Data' }).click();
@@ -6,8 +6,6 @@ export const enableDataLayer = async (page: Page, layer: string) => {
     await page.getByRole('button', { name: 'Data Layers' }).click();
   }
   await page.getByRole('button', { name: 'Reset all filters' }).click();
-  const check = page.getByText(layer).locator('//preceding-sibling::*').getByLabel('check');
-  await expect(check).toBeVisible();
-  await check.click();
+  await page.getByText(layer).locator('//preceding-sibling::*').getByLabel('check').click();
   await page.getByRole('button', { name: 'Close' }).click();
 }

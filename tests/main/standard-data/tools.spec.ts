@@ -1,39 +1,18 @@
-import { expect, Page, test } from '../../../fixtures';
-import { baseURL, GRID } from '../../../playwright.config';
-import { useSavedAoi } from '../../../utils/aois';
-import { navigateToMap } from '../../../utils/before-test';
-import { getJSON, waitForApiResponse } from '../../../utils/network';
-
-let createdAois = 0;
+import { expect, test } from '@fixtures';
+import { baseURL } from '@playwright.config';
+import { deleteAoi, renameAoi, useSavedAoi } from '@aois';
+import { navigateToMap } from '@before-test';
+import { finishExport, waitForApiResponse } from '@network';
 
 test.beforeEach(async ({ page, context }) => {
   await navigateToMap(page, context);
 });
 
-test.afterEach(async ({ page }) => {
-  if (createdAois > 0) {
-    await page.goto(`/${GRID}/export/aoi/list`);
-    await page.getByRole('checkbox').nth(1).check();
-    await page.getByRole('rowgroup').filter({ hasText: 'Delete selected Clear data notifications Name Recent Activity (UTC) Date' }).locator('input[type="button"]').click();
-    await page.getByRole('button', { name: 'Delete', exact: true }).click();
-    await expect(page.getByText('Selected aoi(s) have been')).toBeVisible();
-    createdAois--;
-  }
-});
-
-const deleteAoi = async (page: Page, aoi: string) => {
-  await page.goto(`/${GRID}/export/aoi/list`);
-  await page.locator('td').filter({ hasText: aoi }).locator('//preceding-sibling::*').getByRole('checkbox').first().check();
-  await page.getByRole('rowgroup').filter({ hasText: 'Delete selected Clear data notifications Name Recent Activity (UTC) Date' }).locator('input[type="button"]').click();
-  await page.getByRole('button', { name: 'Delete', exact: true }).click();
-  await expect(page.getByText('Selected aoi(s) have been')).toBeVisible();
-}
-
 test.describe('map tools', () => {
   test('basic hlz export', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/hlz-yeah`, async route => {
-      const json = getJSON(route);
-      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
+      if (route.request().method() === 'POST') await finishExport(route)
+      else await route.continue()
     });
     
     await page.getByRole('button', { name: 'Standard Data' }).click();
@@ -44,10 +23,7 @@ test.describe('map tools', () => {
   });
 
   test('basic los route', async ({ page }) => {
-    await page.route(`${baseURL}/api/drf/los-route`, async route => {
-      const json = getJSON(route);
-      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
-    });
+    await page.route(`${baseURL}/api/drf/los-route`, async route => await finishExport(route));
 
     await page.getByRole('button', { name: 'Standard Data' }).click();
     await page.getByRole('button', { name: 'Visibility Tool' }).click();
@@ -76,8 +52,8 @@ test.describe('map tools', () => {
     await page.getByRole('button', { name: 'Finish' }).click();
     await waitForApiResponse(page, 'los-route');
     await expect(page.getByText('successExport successfully')).toBeVisible();
-    const aoiName = await page.locator('.tooltip-background').getByText('').first().innerText();
-    await deleteAoi(page, aoiName);
+    await renameAoi(page, 'at_aoi_los');
+    await deleteAoi(page, 'at_aoi_los');
   });
 
   test('query tiles opens data tiles', async ({ page }) => {
@@ -94,7 +70,7 @@ test.describe('map tools', () => {
         }
       });
     await expect(page.locator('.tile-checked')).toBeVisible();
-    const aoiName = await page.getByRole('textbox', { name: 'AOI Name:' }).inputValue();
-    await deleteAoi(page, aoiName);
+    await renameAoi(page, 'at_aoi_query_tiles');
+    await deleteAoi(page, 'at_aoi_query_tiles');
   });
 });

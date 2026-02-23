@@ -1,6 +1,6 @@
 import { BrowserContext, Page } from "@playwright/test";
 import { updateCookies } from "./update-cookies";
-import { GRID } from "../playwright.config";
+import { GRID } from "@playwright.config";
 
 export const navigateToMap = async (page: Page, context: BrowserContext) => {
   await page.goto(`/${GRID}/map`);

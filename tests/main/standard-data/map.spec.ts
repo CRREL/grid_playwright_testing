@@ -1,7 +1,7 @@
-import { test, expect } from '../../../fixtures';
-import { useDefaultAoi } from '../../../utils/aois';
-import { navigateToMap } from '../../../utils/before-test';
-import { waitForApiResponse } from '../../../utils/network';
+import { test, expect } from '@fixtures';
+import { useDefaultAoi } from '@aois';
+import { navigateToMap } from '@before-test';
+import { waitForApiResponse } from '@network';
 
 test.beforeEach(async ({ page, context }) => {
   await navigateToMap(page, context);
@@ -9,9 +9,7 @@ test.beforeEach(async ({ page, context }) => {
 
 test.describe('map functions', () => {
   test('filter by map view', async ({ page }) => {
-    for(let i = 0; i < 10; i++) {
-      await page.getByRole('button', { name: 'Zoom out' }).click();
-    }
+    for(let i = 0; i < 10; i++) await page.getByRole('button', { name: 'Zoom out' }).click();
 
     await page.getByRole('button', { name: 'Saved AOIs' }).click();
     if (await page.getByRole('checkbox', { name: 'Filter by map view' }).isChecked()) {
@@ -60,9 +58,7 @@ test.describe('map functions', () => {
     await page.getByRole('button', { name: 'Replay tutorial' }).click();
     await expect(page.locator('div').filter({ hasText: /^Welcome to GRiD Map$/ })).toBeVisible();
     await page.locator('div').filter({ hasText: /^Welcome to GRiD Map$/ }).getByRole('button').click();
-    await page.waitForResponse(response => response.status() === 200
-      && response.request().method() === 'PATCH'
-    );
+    await page.waitForResponse(response => response.status() === 200 && response.request().method() === 'PATCH');
     await expect(page.locator('div').filter({ hasText: /^Welcome to GRiD Map$/ })).not.toBeVisible();
   });
 

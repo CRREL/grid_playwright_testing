@@ -1,9 +1,9 @@
-import { expect, Page, test } from "../../../fixtures";
-import { baseURL } from "../../../playwright.config";
-import { isSorted, useSavedAoi } from "../../../utils/aois";
-import { navigateToMap } from "../../../utils/before-test";
-import { finishAndExpectExport } from "../../../utils/exports";
-import { getJSON, waitForApiResponse } from "../../../utils/network";
+import { expect, Page, test } from "@fixtures";
+import { baseURL } from "@playwright.config";
+import { isSorted, useSavedAoi } from "@aois";
+import { navigateToMap } from "@before-test";
+import { finishAndExpectExport, selectFileFormat } from "@exports";
+import { finishExport, verifyExport, waitForApiResponse } from "@network";
 
 const getFeatureLayerLoc = (page: Page, layer: string) => {
   const layers = layer.split('/');
@@ -27,57 +27,38 @@ const enableDatalayer = async (page: Page) => {
   }
   await page.getByRole('button', { name: 'Expand Layer Expand Layer' }).click();
 
-  const loc = getFeatureLayerLoc(page, 'Petroleum, Oil, & Lubricants Storage/Oil Storage (Ursa Black Gold)/2025');
-  await expect(loc).toBeVisible();
-  await loc.click();
+  await getFeatureLayerLoc(page, 'Commercial Data and Analytic Services/Active Products/Petroleum Storage/<= 2025-12-03').click();
 }
 
 const exportFileType = async (page: Page, fileType: string) => {
-  await page.route(`${baseURL}/api/drf/mapexport`, async route => {
-    const json = getJSON(route);
-    expect(json !== null).toBeTruthy();
-    await route.continue({postData: JSON.stringify({ ...json, warn: false })});
-  });
+  await page.route(`${baseURL}/api/drf/mapexport/export/*/`, async route => await finishExport(route));
 
-  await enableDatalayer(page);
-  await useSavedAoi(page, "at_aoi_source_com");
-
-  const features = page.getByText('Features', { exact: true });
-  await expect(features).not.toBeDisabled();
-  await features.click();
-
-  const select = page.getByRole('checkbox', { name: 'Select row' }).first();
-  await expect(select).toBeVisible();
-  await select.check();
-  await page.getByRole('button', { name: 'Export features', exact: true }).click();
-
-  const dropdown = page.locator('.modal-body .layer-select-dropdown');
-  await expect(dropdown).toBeVisible();
-  await dropdown.click();
-  const button = page.getByRole('button', { name: fileType });
-  await expect(button).toBeVisible();
-  await button.click();
+  await selectFirstAndExport(page, 'Features');
+  await selectFileFormat(page, fileType);
   await finishAndExpectExport(page);
+}
+
+const selectFirstAndExport = async (page: Page, type: 'Layers' | 'Features') => {
+  await page.getByText(type, { exact: true }).click();
+  await page.getByRole('checkbox', { name: 'Select row' }).first().check();
+  await page.getByRole('button', { name: `Export ${type.toLocaleLowerCase()}`, exact: true }).click();
 }
 
 test.beforeEach(async ({ page, context }) => {
   await navigateToMap(page, context);
+  await enableDatalayer(page);
+  await useSavedAoi(page, "at_aoi_source_com");
 });
 
 test.describe('source commercial', () => {
   test('features map table sort', async ({ page }) => {
-    await enableDatalayer(page);
-
-    await useSavedAoi(page, "at_aoi_source_com");
     await page.getByText('Features', { exact: true }).click();
     
     const ogr = page.getByRole('button', { name: 'Ogr Fid' });
-    await expect(ogr).toBeVisible();
     await ogr.click();
     await page.waitForTimeout(500);
     const featuresBefore = await page.locator('td#ogr_fid').allTextContents();
-    expect(featuresBefore.length > 1).toBeTruthy();
-    expect(isSorted(featuresBefore, 'ascending', 'number')).toBeTruthy();
+    expect(featuresBefore.length > 1 && isSorted(featuresBefore, 'ascending', 'number')).toBeTruthy();
 
     await ogr.click();
     await page.waitForTimeout(500);
@@ -86,92 +67,45 @@ test.describe('source commercial', () => {
   });
 
   test('layer export', async ({ page }) => {
-    await page.route(`${baseURL}/api/drf/mapexport`, async route => {
-      const json = getJSON(route);
-      expect(json !== null).toBeTruthy();
-      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
-    });
+    await page.route(`${baseURL}/api/drf/mapexport/export/*/`, async route => await finishExport(route));
     
-    await enableDatalayer(page);
-    await useSavedAoi(page, "at_aoi_source_com");
-
-    const layers = page.getByText('Layers', { exact: true });
-    await expect(layers).not.toBeDisabled();
-    await layers.click();
-
-    const select = page.getByRole('checkbox', { name: 'Select row' }).first();
-    await expect(select).toBeVisible();
-    await select.check();
-    await page.getByRole('button', { name: 'Export layers' }).click();
+    await selectFirstAndExport(page, 'Layers');
     await finishAndExpectExport(page);
   });
 
   test('layer global export', async ({ page }) => {
-    await page.route(`${baseURL}/api/drf/mapexport`, async route => {
-      const json = getJSON(route);
-      expect(json !== null && json?.cds_global).toBeTruthy();
-      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
-    });
-    
-    await enableDatalayer(page);
-    await useSavedAoi(page, "at_aoi_source_com");
+    let callCount = 0;
+    const validation = (json: any) => ++callCount && json?.cds_global;
+    await page.route(`${baseURL}/api/drf/mapexport/export/*/`, async route => await verifyExport(route, 'PATCH', validation));
 
-    const layers = page.getByText('Layers', { exact: true });
-    await expect(layers).not.toBeDisabled();
-    await layers.click();
-
-    const select = page.getByRole('checkbox', { name: 'Select row' }).first();
-    await expect(select).toBeVisible();
-    await select.check();
-    await page.getByRole('button', { name: 'Export layers' }).click();
-
-    const checkbox = page.getByRole('checkbox').nth(3);
-    await expect(checkbox).toBeVisible();
-    await checkbox.check();
+    await selectFirstAndExport(page, 'Layers');
+    await page.getByText('Global Export').locator('//following-sibling::*').getByRole('checkbox').click();
+    expect(callCount).toEqual(1);
     await finishAndExpectExport(page);
   });
 
   test('single feature export', async ({ page }) => {
-    await page.route(`${baseURL}/api/drf/mapexport`, async route => {
-      const json = getJSON(route);
-      expect(json !== null).toBeTruthy();
-      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
-    });
+    await page.route(`${baseURL}/api/drf/mapexport/export/*/`, async route => finishExport(route));
 
-    await enableDatalayer(page);
-    await useSavedAoi(page, "at_aoi_source_com");
-
-    const features = page.getByText('Features', { exact: true });
-    await expect(features).not.toBeDisabled();
-    await features.click();
-
-    const select = page.getByRole('checkbox', { name: 'Select row' }).first();
-    await expect(select).toBeVisible();
-    await select.check();
-    await page.getByRole('button', { name: 'Export features', exact: true }).click();
+    await selectFirstAndExport(page, 'Features');
     await finishAndExpectExport(page);
   });
 
   test('multiple features export', async ({ page }) => {
-    await page.route(`${baseURL}/api/drf/mapexport`, async route => {
-      const json = getJSON(route);
-      expect(json !== null && json?.cds_feature_ids.length === 3).toBeTruthy();
-      await route.continue({postData: JSON.stringify({ ...json, warn: false })});
-    });
+    let callCount = 0;
+    const validation = (json: any) => ++callCount && json?.cds_feature_ids?.length === 3
+    await page.route(`${baseURL}/api/drf/mapexport/export/`, async route => verifyExport(route, 'POST', validation));
 
-    await enableDatalayer(page);
-    await useSavedAoi(page, "at_aoi_source_com");
-
-    const features = page.getByText('Features', { exact: true });
-    await expect(features).not.toBeDisabled();
-    await features.click();
-
-    await page.waitForTimeout(1000);
+    await page.getByText('Features', { exact: true }).click();
+    await waitForApiResponse(page, 'cdsmap/attributetable/cdsfilterlayer/*');
+    await page.waitForTimeout(500);
     expect(await page.getByRole('gridcell', { name: 'Select row' }).count()).toBeGreaterThan(2);
+
     await page.getByRole('checkbox', { name: 'Select row 1', exact: true }).check();
     await page.getByRole('checkbox', { name: 'Select row 2', exact: true }).check();
     await page.getByRole('checkbox', { name: 'Select row 3', exact: true }).check();
     await page.getByRole('button', { name: 'Export features', exact: true }).click();
+    expect(callCount).toEqual(1);
     await finishAndExpectExport(page);
   });
 

@@ -1,3 +1,4 @@
+import { GRID } from "@playwright.config";
 import { expect, Page } from "@playwright/test";
 import path from "path";
 
@@ -70,4 +71,22 @@ export const useSavedAoi = async (page: Page, aoi: string) => {
   if (skipGoToAoi) return;
   await aoiLoc.click();
   await page.getByRole('button', { name: `Go to AOI: ${aoi}` }).click();
+}
+
+export const renameAoi = async (page: Page, aoi: string) => {
+  await page.getByRole('button', { name: 'Edit AOI Details' }).click();
+  await page.getByRole('textbox', { name: 'Name', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
+  await page.getByRole('textbox', { name: 'Name', exact: true }).fill(aoi);
+  await page.getByRole('button', { name: 'Edit AOI Details' }).click();
+  await page.waitForResponse(response => response.status() === 200 && response.request().method() === 'PATCH');
+  await page.waitForTimeout(500);
+}
+
+export const deleteAoi = async (page: Page, aoi: string) => {
+  await page.goto(`/${GRID}/export/aoi/list`);
+  await page.locator('td').filter({ hasText: aoi }).locator('//preceding-sibling::*').getByRole('checkbox').first().check();
+  await page.getByRole('rowgroup').filter({ hasText: 'Delete selected Clear data notifications Name Recent Activity (UTC) Date' }).locator('input[type="button"]').click();
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(page.getByText('Selected aoi(s) have been')).toBeVisible();
 }

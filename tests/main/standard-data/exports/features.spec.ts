@@ -1,55 +1,25 @@
-import { expect, Page, test } from '../../../../fixtures';
-import { baseURL } from '../../../../playwright.config';
-import { isSorted, useDefaultAoi, useSavedAoi } from '../../../../utils/aois';
-import { navigateToMap } from '../../../../utils/before-test';
-import { finishAndExpectExport } from '../../../../utils/exports';
-import { enableDataLayer } from '../../../../utils/layers';
-import { getJSON, waitForApiResponse } from '../../../../utils/network';
-
-const exportFileType = async (page: Page, fileType: string) => {
-  await page.route(`${baseURL}/api/drf/mapexport`, async route => {
-    const json = getJSON(route);
-    expect(json !== null).toBeTruthy();
-    await route.continue({postData: JSON.stringify({ ...json, warn: false })});
-  });
-
-  await enableDataLayer(page, "features");
-  await useDefaultAoi(page);
-
-  await waitForApiResponse(page, 'maptable?*');
-  const select = page.getByRole('checkbox', { name: 'Select row' }).first();
-  await expect(select).toBeVisible();
-  await select.check();
-  await page.getByRole('button', { name: 'Export', exact: true }).click();
-
-  const dropdown = page.locator('.modal-body .layer-select-dropdown');
-  await expect(dropdown).toBeVisible();
-  await dropdown.click();
-  const button = page.getByRole('button', { name: fileType });
-  await expect(button).toBeVisible();
-  await button.click();
-  await finishAndExpectExport(page);
-}
+import { expect, test } from '@fixtures';
+import { isSorted, useDefaultAoi } from '@aois';
+import { navigateToMap } from '@before-test';
+import { exportFileType } from '@exports';
+import { enableDataLayer } from '@layers';
+import { waitForApiResponse } from '@network';
 
 test.beforeEach(async ({ page, context }) => {
   await navigateToMap(page, context);
+  await enableDataLayer(page, "features");
+  await useDefaultAoi(page);
 });
 
 test.describe('export features', () => {
   test('features map table sort', async ({ page }) => {
-    await enableDataLayer(page, "features");
-    await useDefaultAoi(page);
-
-    await waitForApiResponse(page, 'maptable?*');
     const program = page.getByRole('button', { name: 'Program' });
-    await expect(program).toBeVisible();
     await program.click();
     await waitForApiResponse(page, 'maptable?*');
     await page.waitForTimeout(1000);
 
     const programsBefore = await page.locator('td#program').allTextContents();
-    expect(programsBefore.length > 1).toBeTruthy();
-    expect(isSorted(programsBefore, 'ascending')).toBeTruthy();
+    expect(programsBefore.length > 1 && isSorted(programsBefore, 'ascending')).toBeTruthy();
 
     await program.click();
     await waitForApiResponse(page, 'maptable?*');
@@ -94,18 +64,9 @@ test.describe('export features', () => {
   test('features download tile', async ({ page }) => {
     test.setTimeout(300000);
 
-    await enableDataLayer(page, "features");
-    await useDefaultAoi(page);
+    await page.getByText('Data Tiles').click();
 
-    await waitForApiResponse(page, 'maptable?*');
-    const dataTiles = page.getByText('Data Tiles');
-    await expect(dataTiles).not.toBeDisabled();
-    await dataTiles.click();
-
-    await waitForApiResponse(page, 'maptable?*');
-    const select = page.getByRole('checkbox', { name: 'Select row' }).first();
-    await expect(select).toBeVisible();
-    await select.check();
+    await page.getByRole('checkbox', { name: 'Select row' }).first().check();
     await page.getByRole('link', { name: 'Download selected' }).click();
     await expect(page.getByText('Download initiated.')).toBeVisible();
 

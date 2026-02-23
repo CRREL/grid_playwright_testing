@@ -1,0 +1,17 @@
+{
+  // Visit https://aka.ms/tsconfig to read more about this file
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@playwright.config": ["playwright.config"], // This mapping is relative to "baseUrl".
+      "@fixtures": ["fixtures"],
+      "@utils/*": ["utils/*"],
+      "@aois": ["utils/aois"],
+      "@before-test": ["utils/before-test"],
+      "@exports": ["utils/exports"],
+      "@layers": ["utils/layers"],
+      "@network": ["utils/network"],
+    },
+    "esModuleInterop": true
+  }
+}
