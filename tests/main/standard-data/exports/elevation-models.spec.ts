@@ -65,22 +65,27 @@ test.describe('export elevation models', () => {
   });
 
   test('elevation models export GeoTiff', async ({ page }) => {
+    await useSavedAoi(page, "at_aoi_ukraine");
     await exportFileType(page, 'GeoTiff');
   });
 
   test('elevation models export TAK Format', async ({ page }) => {
+    await useSavedAoi(page, "at_aoi_ukraine");
     await exportFileType(page, 'TAK Format');
   });
 
   test('elevation models export BAG', async ({ page }) => {
+    await useSavedAoi(page, "at_aoi_ukraine");
     await exportFileType(page, 'BAG');
   });
 
   test('elevation models export National Imagery Transmission Format', async ({ page }) => {
+    await useSavedAoi(page, "at_aoi_ukraine");
     await exportFileType(page, 'National Imagery Transmission Format');
   });
 
   test('elevation models export Source Format', async ({ page }) => {
+    await useSavedAoi(page, "at_aoi_ukraine");
     await exportFileType(page, 'Source Format');
   });
 
