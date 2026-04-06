@@ -69,7 +69,7 @@ test.describe('map tools', () => {
           y: box.height / 2
         }
       });
-    await expect(page.locator('.tile-checked')).toBeVisible();
+    await expect(page.getByText('Download selected')).toBeVisible();
     await renameAoi(page, 'at_aoi_query_tiles');
     await deleteAoi(page, 'at_aoi_query_tiles');
   });
