@@ -3,6 +3,13 @@ import { baseURL } from '@playwright.config';
 import { deleteAoi, renameAoi, useSavedAoi } from '@aois';
 import { navigateToMap } from '@before-test';
 import { finishExport, waitForApiResponse } from '@network';
+import { enableDataLayer } from '@utils/layers';
+import { Page } from '@playwright/test';
+
+const changeAnalysisTool = async (page: Page, toolName: string) => {
+  await page.getByRole('button', { name: 'Change analysis tool' }).click();
+  await page.getByRole('button', { name: toolName }).click();
+};
 
 test.beforeEach(async ({ page, context }) => {
   await navigateToMap(page, context);
@@ -15,18 +22,20 @@ test.describe('map tools', () => {
       else await route.continue()
     });
     
-    await page.getByRole('button', { name: 'Standard Data' }).click();
+    await page.getByRole('button', { name: 'Data' }).click();
+    await page.getByText("Layers", { exact: true }).locator('//preceding-sibling::*').click();
     await useSavedAoi(page, "at_aoi_hlz");
-    await page.getByRole('button', { name: 'HLZ Tool' }).click();
-    await page.getByRole('button', { name: 'Finish' }).click();
-    await expect(page.getByText('successHLZ successfully')).toBeVisible();
+    await changeAnalysisTool(page, 'HLZ Tool');
+    await page.getByRole('button', { name: 'Finish', exact: true }).click();
+    await expect(page.getByText('HLZ successfully submitted!')).toBeVisible();
   });
 
   test('basic los route', async ({ page }) => {
     await page.route(`${baseURL}/api/drf/los-route`, async route => await finishExport(route));
 
-    await page.getByRole('button', { name: 'Standard Data' }).click();
-    await page.getByRole('button', { name: 'Visibility Tool' }).click();
+    await page.getByRole('button', { name: 'Data' }).click();
+    await page.getByText("Layers", { exact: true }).locator('//preceding-sibling::*').click();
+    await changeAnalysisTool(page, 'Visibility Tool');
     await page.getByRole('radio', { name: 'MGRS' }).check();
 
     await page.getByRole('textbox', { name: 'Coordinate' }).click();
@@ -51,7 +60,7 @@ test.describe('map tools', () => {
 
     await page.getByRole('button', { name: 'Finish' }).click();
     await waitForApiResponse(page, 'los-route');
-    await expect(page.getByText('successExport successfully')).toBeVisible();
+    await expect(page.getByText('Export successfully submitted!')).toBeVisible();
     await renameAoi(page, 'at_aoi_los');
     await deleteAoi(page, 'at_aoi_los');
   });
@@ -60,8 +69,8 @@ test.describe('map tools', () => {
     const canvas = page.locator('body');
     const box = await canvas.boundingBox();
 
-    await page.getByRole('button', { name: 'Standard Data' }).click();
-    await page.getByRole('button', { name: 'Query Tiles' }).click();
+    await enableDataLayer(page, "elevation models");
+    await changeAnalysisTool(page, 'Query Tiles');
     if (box !== null) 
       await page.locator('canvas').click({
         position: {

@@ -3,6 +3,13 @@ import { createDefaultAoiByCoordinates, deleteAoi, lineFile, pointFile, polygonF
 import { waitForApiResponse } from '@network';
 import { navigateToMap } from '@before-test';
 
+const renameAndDeleteAoi = async (page: Page, aoiName: string) => {
+  await page.waitForResponse(response => response.status() === 201 && response.request().method() === 'POST');
+  await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
+  await renameAoi(page, aoiName);
+  await deleteAoi(page, aoiName);
+};
+
 test.beforeEach(async ({ page, context }) => {
   await navigateToMap(page, context);
 });
@@ -32,10 +39,7 @@ test.describe('aoi creation', () => {
     await page.getByRole('radio', { name: 'Andorra' }).click();
     await page.getByRole('button', { name: 'Submit' }).click();
 
-    await page.waitForResponse(response => response.status() === 201 && response.request().method() === 'POST');
-    await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    await renameAoi(page, 'at_aoi_by_country_andorra');
-    await deleteAoi(page, 'at_aoi_by_country_andorra');
+    await renameAndDeleteAoi(page, 'at_aoi_by_country_andorra');
   });
 
   test('aoi by geojson', async ({ page }) => {
@@ -48,10 +52,7 @@ test.describe('aoi creation', () => {
     await page.getByRole('textbox', { name: 'Coordinate' }).fill(geojsonPoly);
     await page.getByRole('button', { name: 'Submit' }).click();
 
-    await page.waitForResponse(response => response.status() === 201 && response.request().method() === 'POST');
-    await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    await renameAoi(page, 'at_aoi_by_geojson');
-    await deleteAoi(page, 'at_aoi_by_geojson');
+    await renameAndDeleteAoi(page, 'at_aoi_by_geojson');
   });
 
   test('aoi by wkt', async ({ page }) => {
@@ -64,10 +65,7 @@ test.describe('aoi creation', () => {
     await page.getByRole('textbox', { name: 'Coordinate' }).fill(wktPoly);
     await page.getByRole('button', { name: 'Submit' }).click();
 
-    await page.waitForResponse(response => response.status() === 201 && response.request().method() === 'POST');
-    await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    await renameAoi(page, 'at_aoi_by_wkt');
-    await deleteAoi(page, 'at_aoi_by_wkt');
+    await renameAndDeleteAoi(page, 'at_aoi_by_wkt');
   });
 
   test('aoi by coordinates', async ({ page }) => {
@@ -75,29 +73,28 @@ test.describe('aoi creation', () => {
     await page.getByRole('button', { name: 'AOI By Coordinates' }).click();
 
     await page.getByRole('textbox', { name: 'Coordinate' }).first().click();
-    await page.getByRole('textbox', { name: 'Coordinate' }).first().press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'Coordinate' }).first().fill('38.983, -77.146');
 
     await page.getByRole('textbox', { name: 'Coordinate' }).nth(1).click();
-    await page.getByRole('textbox', { name: 'Coordinate' }).nth(1).press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'Coordinate' }).nth(1).fill('38.985, -76.945');
 
     await page.getByRole('textbox', { name: 'Coordinate' }).nth(2).click();
-    await page.getByRole('textbox', { name: 'Coordinate' }).nth(2).press('ControlOrMeta+a');
-    await page.getByRole('textbox', { name: 'Coordinate' }).nth(2).fill('38.876, -77.156');
+    await page.getByRole('textbox', { name: 'Coordinate' }).nth(2).fill('38.870, -76.931');
 
     await page.getByRole('textbox', { name: 'Coordinate' }).nth(3).click();
-    await page.getByRole('textbox', { name: 'Coordinate' }).nth(3).press('ControlOrMeta+a');
-    await page.getByRole('textbox', { name: 'Coordinate' }).nth(3).fill('38.870, -76.931');
+    await page.getByRole('textbox', { name: 'Coordinate' }).nth(3).fill('38.876, -77.156');
 
-    await page.locator('li:nth-child(4) > svg').dragTo(page.locator('li:nth-child(3) > svg'));
+    await page.getByRole('radio', { name: 'DD' }).check();
+    await page.locator('li:nth-child(4) > .svg-inline--fa.fa-bars').dragTo(page.locator('li:nth-child(3) > .svg-inline--fa.fa-bars'));
     await waitForApiResponse(page, 'verifygeom');
+    await expect(page.getByText('Unable to validate provided')).toBeVisible();
+
+    await page.locator('li:nth-child(3) > .svg-inline--fa.fa-bars').dragTo(page.locator('li:nth-child(4) > .svg-inline--fa.fa-bars'));
+    await waitForApiResponse(page, 'verifygeom');
+    await expect(page.getByText('Unable to validate provided')).not.toBeVisible();
     await page.getByRole('button', { name: 'Submit' }).click();
 
-    await page.waitForResponse(response => response.status() === 201 && response.request().method() === 'POST');
-    await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    await renameAoi(page, 'at_aoi_by_coords');
-    await deleteAoi(page, 'at_aoi_by_coords');
+    await renameAndDeleteAoi(page, 'at_aoi_by_coords');
   });
 
   test('aoi by radius', async ({ page }) => {
@@ -106,16 +103,12 @@ test.describe('aoi creation', () => {
     await page.getByRole('radio', { name: 'Coordinate - Radius' }).check();
 
     await page.getByRole('spinbutton', { name: 'Buffer (m):' }).click();
-    await page.getByRole('spinbutton', { name: 'Buffer (m):' }).press('ControlOrMeta+a');
     await page.getByRole('spinbutton', { name: 'Buffer (m):' }).fill('500');
 
     await waitForApiResponse(page, 'verifygeom');
     await page.getByRole('button', { name: 'Submit' }).click();
 
-    await page.waitForResponse(response => response.status() === 201 && response.request().method() === 'POST');
-    await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    await renameAoi(page, 'at_aoi_by_radius');
-    await deleteAoi(page, 'at_aoi_by_radius');
+    await renameAndDeleteAoi(page, 'at_aoi_by_radius');
   });
 
   test('aoi upload polygon', async ({ page }) => {
@@ -132,10 +125,7 @@ test.describe('aoi creation', () => {
     await page.locator('#upload-name-checkbox').check();
     await page.getByRole('button', { name: 'Import AOIs' }).click();
 
-    await page.waitForResponse(response => response.status() === 201 && response.request().method() === 'POST');
-    await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    await renameAoi(page, 'at_aoi_by_upload_polygon');
-    await deleteAoi(page, 'at_aoi_by_upload_polygon');
+    await renameAndDeleteAoi(page, 'at_aoi_by_upload_polygon');
   });
 
   test('aoi upload line', async ({ page }) => {
@@ -151,14 +141,11 @@ test.describe('aoi creation', () => {
     const fileChooser = await fileChooserPromise;
     await fileChooser.setFiles(lineFile);
 
-    await page.getByRole('button', { name: 'Upload' }).click();
+    await page.getByRole('button', { name: 'Upload', exact: true }).click();
     await page.locator('#upload-name-checkbox').check();
     await page.getByRole('button', { name: 'Import AOIs' }).click();
 
-    await page.waitForResponse(response => response.status() === 201 && response.request().method() === 'POST');
-    await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    await renameAoi(page, 'at_aoi_by_upload_line');
-    await deleteAoi(page, 'at_aoi_by_upload_line');
+    await renameAndDeleteAoi(page, 'at_aoi_by_upload_line');
   });
 
   test('aoi upload point', async ({ page }) => {
@@ -174,13 +161,10 @@ test.describe('aoi creation', () => {
     const fileChooser = await fileChooserPromise;
     await fileChooser.setFiles(pointFile);
 
-    await page.getByRole('button', { name: 'Upload' }).click();
+    await page.getByRole('button', { name: 'Upload', exact: true }).click();
     await page.locator('#upload-name-checkbox').check();
     await page.getByRole('button', { name: 'Import AOIs' }).click();
 
-    await page.waitForResponse(response => response.status() === 201 && response.request().method() === 'POST');
-    await expect(page.locator('.tooltip-container > div:nth-child(2)')).toBeVisible();
-    await renameAoi(page, 'at_aoi_by_upload_point');
-    await deleteAoi(page, 'at_aoi_by_upload_point');
+    await renameAndDeleteAoi(page, 'at_aoi_by_upload_point');
   });
 });

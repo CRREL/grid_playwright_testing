@@ -15,17 +15,18 @@ test.describe('map functions', () => {
     if (await page.getByRole('checkbox', { name: 'Filter by map view' }).isChecked()) {
       await page.getByRole('checkbox', { name: 'Filter by map view' }).check();
     }
-    await waitForApiResponse(page, 'aois?*');
+    await waitForApiResponse(page, 'aois/?*');
     const defaultAoi = page.locator('#drawer-container').getByText('at_aoi_default_washington', { exact: true }).first();
     const aoi2 = page.locator('#drawer-container').getByText('at_aoi_ukraine', { exact: true }).first();
     await expect(defaultAoi).toBeVisible();
     await expect(aoi2).toBeVisible();
 
+    await page.getByRole('button', { name: 'Saved AOIs' }).click();
     await useDefaultAoi(page);
 
     await page.getByRole('button', { name: 'Saved AOIs' }).click();
     await page.getByRole('checkbox', { name: 'Filter by map view' }).check();
-    await waitForApiResponse(page, 'aois?*');
+    await waitForApiResponse(page, 'aois/?*');
     await expect(defaultAoi).toBeVisible();
     await expect(aoi2).not.toBeVisible();
   });
@@ -53,9 +54,10 @@ test.describe('map functions', () => {
   });
 
   test('replay tutorial', async ({ page }) => {
-    await page.getByRole('button', { name: 'Standard Data' }).click();
+    await page.getByRole('button', { name: 'Data' }).click();
+    await page.getByText("Layers", { exact: true }).locator('//preceding-sibling::*').click();
     await page.getByRole('button', { name: 'Preferences' }).click();
-    await page.getByRole('button', { name: 'Replay tutorial' }).click();
+    await page.getByRole('button', { name: 'Replay map tutorial' }).click();
     await expect(page.locator('div').filter({ hasText: /^Welcome to GRiD Map$/ })).toBeVisible();
     await page.locator('div').filter({ hasText: /^Welcome to GRiD Map$/ }).getByRole('button').click();
     await page.waitForResponse(response => response.status() === 200 && response.request().method() === 'PATCH');

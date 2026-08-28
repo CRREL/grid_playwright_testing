@@ -1,5 +1,6 @@
 import { GRID } from "@playwright.config";
-import { expect, Page } from "@playwright/test";
+import { expect, Page, test } from "@playwright/test";
+import { waitForApiResponse } from "@network";
 import path from "path";
 
 const defaultAoiName = "at_aoi_default_washington";
@@ -76,7 +77,6 @@ export const useSavedAoi = async (page: Page, aoi: string) => {
 export const renameAoi = async (page: Page, aoi: string) => {
   await page.getByRole('button', { name: 'Edit AOI Details' }).click();
   await page.getByRole('textbox', { name: 'Name', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Name', exact: true }).press('ControlOrMeta+a');
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill(aoi);
   await page.getByRole('button', { name: 'Edit AOI Details' }).click();
   await page.waitForResponse(response => response.status() === 200 && response.request().method() === 'PATCH');
@@ -90,3 +90,32 @@ export const deleteAoi = async (page: Page, aoi: string) => {
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await expect(page.getByText('Selected aoi(s) have been')).toBeVisible();
 }
+
+export const downloadTile = async (page: Page) => {
+  test.setTimeout(300000);
+
+  await page.getByText('Data Tiles').click();
+  await page.getByRole('checkbox', { name: 'Select row' }).first().check();
+  await page.getByRole('link', { name: 'Download selected' }).click();
+  await expect(page.getByText('Download initiated.')).toBeVisible();
+
+  const download = await page.waitForEvent('download');
+  await download.cancel();
+};
+
+export const testMapTableSort = async (page: Page) => {
+  const program = page.getByRole('button', { name: 'Program' });
+  await program.click();
+  await waitForApiResponse(page, 'maptable?*');
+  await page.waitForTimeout(1000);
+
+  const programsBefore = await page.locator('td#program').allTextContents();
+  expect(programsBefore.length > 1 && isSorted(programsBefore, 'ascending')).toBeTruthy();
+
+  await program.click();
+  await waitForApiResponse(page, 'maptable?*');
+  await page.waitForTimeout(1000);
+
+  const programsAfter = await page.locator('td#program').allTextContents();
+  expect(isSorted(programsAfter, 'descending')).toBeTruthy();
+};

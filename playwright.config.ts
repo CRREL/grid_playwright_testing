@@ -8,10 +8,22 @@ import dotenv from 'dotenv';
 import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
-export const MODE = process.env?.MODE
-export const GRID = MODE === 'dev' ? 'devtestinggrid' : process.env?.GRID ?? 'testgrid'
+const getGrid = (grid: string) => {
+  if (grid === undefined) return 'testgrid';
+  else return 'grid'
+}
 
-export const baseURL = MODE === 'dev' ? 'https://grid-devel-web.rsgiscx.net/devtestinggrid' : `https://grid.nga.mil/${GRID}`;
+const getURL = (grid: string) => {
+  if (grid === 'sc') return 'https://grid.nga.smil.mil/';
+  if (grid === 'tc') return 'https://grid.nga.ic.gov/';
+  else return 'https://grid.nga.mil/';
+}
+
+const gridEnv = process.env?.GRID;
+
+export const MODE = process.env?.MODE
+export const GRID = MODE === 'dev' ? 'devtestinggrid' : getGrid(gridEnv);
+export const baseURL = MODE === 'dev' ? 'https://grid-devel-web.rsgiscx.net/devtestinggrid' : `${getURL(gridEnv)}${GRID}`;
 
 /**
  * See https://playwright.dev/docs/test-configuration.

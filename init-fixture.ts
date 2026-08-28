@@ -61,11 +61,10 @@ export const test = baseTest.extend<{}, { workerStorageState: string }>({
   
       // Wait for user input
       await page.waitForTimeout(10000);
-      await page.getByText('Continue to application').click();
     }
 
     // Wait until the page receives the cookies.
-    await expect(page.locator('#navbarToggle').getByRole('link', { name: 'Map' })).toBeVisible();
+    await page.locator('#navbarToggle').getByRole('link', { name: 'Map' }).click();
     // End of authentication steps.
 
     await page.context().storageState({ path: fileName });
